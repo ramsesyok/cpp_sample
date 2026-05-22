@@ -1,1 +1,13 @@
 3rdparty/grpc
+3rdparty/bin/*.exe
+3rdparty/include/absl
+3rdparty/include/google
+3rdparty/include/grpc
+3rdparty/include/grpc++
+3rdparty/include/grpcpp
+3rdparty/include/re2
+3rdparty/include/upb
+3rdparty/include/protobuf
+3rdparty/include/*.h
+3rdparty/lib/*.a
+3rdparty/lib/*.so

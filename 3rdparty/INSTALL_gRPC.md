@@ -18,7 +18,7 @@
 - Git
 - CMake 3.16 以上
 - C++17 対応のコンパイラ
-  - Windows: Visual Studio 2022 (MSVC v143) を推奨
+  - Windows: TDM-GCC 10.3.0 (MinGW-w64, x86_64-w64-mingw32) を使用する
   - Linux: GCC 9 以上 もしくは Clang 10 以上
 - (Linux のみ) `build-essential`, `autoconf`, `libtool`, `pkg-config`
 
@@ -42,16 +42,19 @@ git clone --recurse-submodules -b v1.78.1 --depth 1 --shallow-submodules https:/
 
 ---
 
-## 1. Windows 版
+## 1. Windows 版 (TDM-GCC / MinGW-w64)
 
-Visual Studio 2022 + CMake を用いて、x64 / Release 構成の静的ライブラリをビルドする。
+TDM-GCC 10.3.0 (MinGW-w64) + CMake を用いて、x64 / Release 構成の静的ライブラリをビルドする。
 PowerShell から実行することを想定する。
+
+> 前提: TDM-GCC は `C:\TDM-GCC-64\` に、CMake は `C:\Program Files\CMake\bin\` に導入済みであることを前提とする。
 
 ### 1-1. ビルド用の作業変数を定義する
 
-`grpc/` ディレクトリで以下を実行する。`<REPO>` は実環境の絶対パスに置き換える。
+任意の作業ディレクトリ(リポジトリ外を推奨)に `grpc/` を clone した上で、その親ディレクトリで以下を実行する。`<REPO>` は本リポジトリのルートの絶対パスに置き換える。
 
 ```powershell
+$env:Path  = "C:\TDM-GCC-64\bin;C:\Program Files\CMake\bin;" + $env:Path
 $RepoRoot   = "<REPO>"
 $InstallDir = Join-Path $env:TEMP "grpc_install"   # 一旦ここへインストールし、後で 3rdparty/ へ振り分ける
 ```
@@ -62,7 +65,10 @@ $InstallDir = Join-Path $env:TEMP "grpc_install"   # 一旦ここへインスト
 
 ```powershell
 cmake -S . -B build `
-  -G "Visual Studio 17 2022" -A x64 `
+  -G "MinGW Makefiles" `
+  -DCMAKE_C_COMPILER="C:/TDM-GCC-64/bin/gcc.exe" `
+  -DCMAKE_CXX_COMPILER="C:/TDM-GCC-64/bin/g++.exe" `
+  -DCMAKE_MAKE_PROGRAM="C:/TDM-GCC-64/bin/mingw32-make.exe" `
   -DCMAKE_BUILD_TYPE=Release `
   -DCMAKE_INSTALL_PREFIX="$InstallDir" `
   -DgRPC_INSTALL=ON `
@@ -75,20 +81,23 @@ cmake -S . -B build `
   -DgRPC_BUILD_GRPC_PYTHON_PLUGIN=OFF `
   -DgRPC_BUILD_GRPC_RUBY_PLUGIN=OFF `
   -DBUILD_SHARED_LIBS=OFF `
-  -DgRPC_MSVC_STATIC_RUNTIME=OFF `
   -DABSL_PROPAGATE_CXX_STD=ON `
-  -DCMAKE_CXX_STANDARD=17
+  -DCMAKE_CXX_STANDARD=17 `
+  -DOPENSSL_NO_ASM=1 `
+  -DCARES_BUILD_TOOLS=OFF
 ```
 
 > 備考
-> - `gRPC_*_DEP_PROVIDER` は既定の `module` のままとし、submodule で同梱された依存ライブラリを使用する。
-> - `gRPC_MSVC_STATIC_RUNTIME` は、本プロジェクト本体の `/MD` (動的CRT) 設定に合わせて `OFF` にしている。プロジェクト側で `/MT` を使う場合は `ON` に変更すること。
+> - `gRPC_*_DEP_PROVIDER` は既定の `module` のままとし、submodule で同梱された依存ライブラリ(Protobuf, abseil, BoringSSL, c-ares, re2, zlib, upb)を使用する。
+> - MinGW では `-G "MinGW Makefiles"` を用いる。Ninja を入れている場合は `-G Ninja` のほうがビルドが速い。
+> - `-DOPENSSL_NO_ASM=1` は **必須**。BoringSSL の Windows ビルドは既定で NASM を必要とするが、TDM-GCC には同梱されないため、これを指定して BoringSSL を C 実装にフォールバックさせる。
+> - `-DCARES_BUILD_TOOLS=OFF` は **必須**。c-ares 同梱の CLI ツール (`ahost.exe` 等) を MinGW でリンクすると `clock_gettime` 系シンボルが多重定義となりビルドが失敗する。これらツールは gRPC 本体のリンクには不要。
 
 ### 1-3. ビルドとインストール
 
 ```powershell
-cmake --build build --config Release -j
-cmake --install build --config Release
+cmake --build build -j
+cmake --install build
 ```
 
 `$InstallDir` 配下に `include/`, `lib/`, `bin/`, `share/`, `cmake/` などが生成される。
@@ -101,19 +110,19 @@ PowerShell で以下を実行する。
 $Dst3rd = Join-Path $RepoRoot "3rdparty"
 New-Item -ItemType Directory -Force -Path (Join-Path $Dst3rd "include") | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $Dst3rd "lib")     | Out-Null
+New-Item -ItemType Directory -Force -Path (Join-Path $Dst3rd "bin")     | Out-Null
 
 # ヘッダ: include/ 配下を丸ごとコピー(grpc, grpcpp, google, absl, upb, re2, ... を含む)
 Copy-Item -Recurse -Force `
   -Path (Join-Path $InstallDir "include\*") `
   -Destination (Join-Path $Dst3rd "include")
 
-# ライブラリ: *.lib のみを 3rdparty/lib へフラットに配置
+# ライブラリ: MinGW 静的ライブラリ (*.a) を 3rdparty/lib へフラットに配置
 Copy-Item -Force `
-  -Path (Join-Path $InstallDir "lib\*.lib") `
+  -Path (Join-Path $InstallDir "lib\*.a") `
   -Destination (Join-Path $Dst3rd "lib")
 
-# protoc / grpc_cpp_plugin など、コード生成に必要な実行ファイルも併せて配置(任意)
-New-Item -ItemType Directory -Force -Path (Join-Path $Dst3rd "bin") | Out-Null
+# protoc / grpc_cpp_plugin など、コード生成に必要な実行ファイルも併せて配置
 Copy-Item -Force `
   -Path (Join-Path $InstallDir "bin\*.exe") `
   -Destination (Join-Path $Dst3rd "bin")
@@ -121,9 +130,21 @@ Copy-Item -Force `
 
 > ユーザ要件上、ヘッダの主目的は `3rdparty/include/grpc/` への配置だが、gRPC は `grpcpp/`, `google/protobuf/`, `absl/`, `upb/` 等の **兄弟ディレクトリ** のヘッダを `#include` で参照する。これらを失うとビルドできなくなるため、`include/` 配下は一括コピーする方針とする。
 
-### 1-5. 動作確認(任意)
+### 1-5. 動作確認
 
-`<REPO>/3rdparty/include/grpcpp/grpcpp.h` および `<REPO>/3rdparty/lib/grpc++.lib` (Debug 構成で作った場合は `grpc++d.lib` 等) が存在することを確認する。
+`<REPO>/3rdparty/include/grpcpp/grpcpp.h` および `<REPO>/3rdparty/lib/libgrpc++.a` が存在することを確認する。
+
+```powershell
+Test-Path (Join-Path $RepoRoot "3rdparty\include\grpcpp\grpcpp.h")
+Test-Path (Join-Path $RepoRoot "3rdparty\lib\libgrpc++.a")
+```
+
+### 1-6. トラブルシュート (MinGW 固有)
+
+- **`pthread` 関連リンクエラー**: gRPC は `winpthreads` の使用を想定する。TDM-GCC 標準同梱の `libwinpthread-1.dll` (POSIX スレッドモデル) を使用していることを確認する (`g++ -v` の出力の `Thread model:` が `posix` であること)。`win32` モデルしか入っていないビルドではリンクが通らない。
+- **`<atomic>` / `__sync_*` 警告**: ABI 警告が大量に出ることがあるが、ビルド自体は通る。
+- **BoringSSL のアセンブリ**: MinGW では一部の最適化アセンブリが無効化されるが、CMake が自動的に C 実装にフォールバックする。
+- **リンク時の `multiple definition`**: `-Wl,--allow-multiple-definition` を `CMAKE_EXE_LINKER_FLAGS` に渡して回避するケースがある。本プロジェクトのアプリ側でも、`grpc++` をリンクする際に必要となる場合がある。
 
 ---
 
