@@ -6,7 +6,7 @@
 #include "greet.h"
 
 int main(int argc, char* argv[]) {
-    // RAII で確実に shutdown を呼ぶための薄いガード。
+    // main を抜けるときに自動でデストラクタが呼ばれることを利用して、確実に shutdown を実行する。
     struct LoggingGuard {
         LoggingGuard()  { myapp::common::logging::init(); }
         ~LoggingGuard() { myapp::common::logging::shutdown(); }
