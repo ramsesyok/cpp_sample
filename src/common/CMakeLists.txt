@@ -33,6 +33,8 @@ target_include_directories(myapp_common
 target_link_libraries(myapp_common
     PUBLIC
         Threads::Threads
+    PRIVATE
+        coverage_flags
 )
 
 # --- spdlog のコンパイル時設定 --------------------------------------

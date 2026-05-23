@@ -31,6 +31,47 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # ※ ルート側で 1 回だけ呼ぶのが鉄則。
 enable_testing()
 
+# --- gcov カバレッジ計装 (GCC/Clang, Linux 専用) --------------------
+# 使い方:
+#   cmake -S . -B build -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug
+#   cmake --build build
+#   ctest --test-dir build        # .gcda ファイルを生成
+#   cmake --build build --target coverage   # レポート生成 (gcovr が必要)
+option(ENABLE_COVERAGE "gcov によるカバレッジ計装を有効にする" OFF)
+
+# INTERFACE ライブラリとして常に作成しておく。
+# OFF 時はフラグなしの空ターゲットになるため、
+# サブディレクトリ側で条件分岐なしに target_link_libraries で参照できる。
+add_library(coverage_flags INTERFACE)
+if(ENABLE_COVERAGE)
+    if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+        message(WARNING
+            "ENABLE_COVERAGE=ON ですが CMAKE_BUILD_TYPE が Debug ではありません。"
+            " 最適化によりカバレッジ結果が不正確になる可能性があります。"
+            " -DCMAKE_BUILD_TYPE=Debug の併用を推奨します。")
+    endif()
+    target_compile_options(coverage_flags INTERFACE --coverage)
+    target_link_options(coverage_flags INTERFACE --coverage)
+
+    # gcovr が見つかれば HTML レポートを生成する `coverage` ターゲットを追加。
+    find_program(GCOVR_EXECUTABLE gcovr)
+    if(GCOVR_EXECUTABLE)
+        add_custom_target(coverage
+            COMMAND ${GCOVR_EXECUTABLE}
+                --root ${CMAKE_SOURCE_DIR}/src
+                --exclude ${CMAKE_SOURCE_DIR}/3rdparty
+                --html-details ${CMAKE_BINARY_DIR}/coverage/index.html
+                --print-summary
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            COMMENT "カバレッジレポートを生成中 → ${CMAKE_BINARY_DIR}/coverage/index.html"
+        )
+    else()
+        message(STATUS
+            "gcovr が見つかりません。`coverage` ターゲットは利用できません。"
+            " pip install gcovr でインストールしてください。")
+    endif()
+endif()
+
 # --- サブディレクトリの読み込み -------------------------------------
 # 各サブディレクトリの CMakeLists.txt を読み込んで処理する。
 # これにより src/ と tests/ 配下のターゲット (ライブラリ・実行ファイル)

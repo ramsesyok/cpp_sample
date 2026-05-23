@@ -68,6 +68,45 @@ cmake -S . -B build-debug -DCMAKE_BUILD_TYPE=Debug
 cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release
 ```
 
+## カバレッジ (Linux / GCC・Clang)
+
+`-DENABLE_COVERAGE=ON` を付けてビルドすると、gcov による行カバレッジ計装が有効になる。
+最適化によるカウント誤差を防ぐため、`Debug` ビルドとの併用を推奨する。
+
+```sh
+cmake -S . -B build-cov -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug
+cmake --build build-cov
+ctest --test-dir build-cov --output-on-failure
+```
+
+テスト実行後、各 `.cpp` の計測データ (`.gcda`) が `build-cov/` 以下に生成される。
+
+### gcov で直接確認する
+
+```sh
+cd build-cov/src/CMakeFiles/myapp_lib.dir
+gcov greet.cpp.gcda          # greet.cpp.gcov を生成して行ごとのカウントを表示
+```
+
+### gcovr で HTML レポートを生成する
+
+[gcovr](https://gcovr.com/) をインストールすると、`coverage` ターゲットから
+HTML レポートをワンコマンドで生成できる。
+
+```sh
+pip install gcovr
+
+# cmake 再設定は不要 — すでに build-cov/ がある場合はそのまま使う
+cmake --build build-cov --target coverage
+# → build-cov/coverage/index.html が生成される
+```
+
+ブラウザで `build-cov/coverage/index.html` を開くとファイルごとの
+カバレッジ率と未実行行が確認できる。
+
+> **対象範囲**: `src/` 配下の本体コードのみ計測する。
+> `3rdparty/` (Catch2 など) は集計から除外される。
+
 ## サードパーティ依存
 
 依存はすべて [3rdparty/](3rdparty/) 配下に置き、リポジトリ単体でビルドできる

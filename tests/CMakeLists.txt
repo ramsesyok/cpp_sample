@@ -30,7 +30,7 @@ add_executable(test_greet test_greet.cpp)
 
 # テスト対象のライブラリ (myapp_lib) と Catch2 本体 (catch2_main) をリンク。
 # 用途的にこの実行ファイル内でしか使わないので PRIVATE で良い。
-target_link_libraries(test_greet PRIVATE myapp_lib catch2_main)
+target_link_libraries(test_greet PRIVATE myapp_lib catch2_main coverage_flags)
 
 # CTest に登録する。
 #   - NAME: ctest が表示・選択に使う名前

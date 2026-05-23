@@ -32,7 +32,7 @@ target_include_directories(myapp_lib
 # myapp_lib は myapp_common に依存する (例えば main から共通処理を使いたい場合に備えて)。
 # PUBLIC でリンクしておくと、myapp_lib にリンクするだけで myapp_common の
 # ヘッダ/シンボルも自動的に解決される (依存の推移的伝播)。
-target_link_libraries(myapp_lib PUBLIC myapp_common)
+target_link_libraries(myapp_lib PUBLIC myapp_common PRIVATE coverage_flags)
 
 # --- myapp: 最終的な実行ファイル ------------------------------------
 # main.cpp は薄いエントリポイントだけにし、本体ロジックは myapp_lib 側へ。
@@ -40,4 +40,4 @@ add_executable(myapp main.cpp)
 
 # myapp 実行ファイルだけが myapp_lib を使うので PRIVATE で十分。
 # (myapp にさらにリンクしてくる人はいないため)
-target_link_libraries(myapp PRIVATE myapp_lib)
+target_link_libraries(myapp PRIVATE myapp_lib coverage_flags)
