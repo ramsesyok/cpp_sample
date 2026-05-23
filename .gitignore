@@ -11,3 +11,4 @@
 3rdparty/include/*.h
 3rdparty/lib/*.a
 3rdparty/lib/*.so
+build/

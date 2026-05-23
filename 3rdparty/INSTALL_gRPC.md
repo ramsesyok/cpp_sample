@@ -53,6 +53,9 @@ PowerShell から実行することを想定する。
 
 任意の作業ディレクトリ(リポジトリ外を推奨)に `grpc/` を clone した上で、その親ディレクトリで以下を実行する。`<REPO>` は本リポジトリのルートの絶対パスに置き換える。
 
+> **重要**: 以降の手順 1-2 〜 1-4 は、**同じ PowerShell ウィンドウを閉じずに**続けて実行すること。
+> ウィンドウを閉じると `$RepoRoot` や `$InstallDir` などの変数が消え、後の手順でエラーになる。
+
 ```powershell
 $env:Path  = "C:\TDM-GCC-64\bin;C:\Program Files\CMake\bin;" + $env:Path
 $RepoRoot   = "<REPO>"
@@ -73,7 +76,6 @@ cmake -S . -B build `
   -DCMAKE_INSTALL_PREFIX="$InstallDir" `
   -DgRPC_INSTALL=ON `
   -DgRPC_BUILD_TESTS=OFF `
-  -DgRPC_BUILD_CSHARP_EXT=OFF `
   -DgRPC_BUILD_GRPC_CSHARP_PLUGIN=OFF `
   -DgRPC_BUILD_GRPC_NODE_PLUGIN=OFF `
   -DgRPC_BUILD_GRPC_OBJECTIVE_C_PLUGIN=OFF `
@@ -164,6 +166,9 @@ sudo apt-get install -y build-essential autoconf libtool pkg-config cmake git
 
 `grpc/` ディレクトリで以下を実行する。`<REPO>` は実環境の絶対パスに置き換える。
 
+> **重要**: 以降の手順 2-3 〜 2-5 は、**同じターミナル(シェルセッション)を閉じずに**続けて実行すること。
+> ターミナルを閉じると `REPO_ROOT` や `INSTALL_DIR` などの変数が消え、後の手順でコマンドが正しく動かなくなる。
+
 ```bash
 REPO_ROOT=<REPO>
 INSTALL_DIR=$(mktemp -d -t grpc_install_XXXX)
@@ -178,7 +183,6 @@ cmake -S . -B build \
   -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
   -DgRPC_INSTALL=ON \
   -DgRPC_BUILD_TESTS=OFF \
-  -DgRPC_BUILD_CSHARP_EXT=OFF \
   -DgRPC_BUILD_GRPC_CSHARP_PLUGIN=OFF \
   -DgRPC_BUILD_GRPC_NODE_PLUGIN=OFF \
   -DgRPC_BUILD_GRPC_OBJECTIVE_C_PLUGIN=OFF \
@@ -212,11 +216,13 @@ mkdir -p "${DST_3RD}/include" "${DST_3RD}/lib" "${DST_3RD}/bin"
 # ヘッダ: include/ 配下を丸ごとコピー
 cp -a "${INSTALL_DIR}/include/." "${DST_3RD}/include/"
 
-# ライブラリ: .a / .so* を 3rdparty/lib へフラットに配置
+# ライブラリ: 静的ライブラリ (.a) を 3rdparty/lib へフラットに配置
 #   ※ ディストリビューションによっては lib64/ に出力されるため両方を見る
+#   ※ -DBUILD_SHARED_LIBS=OFF でビルドしても vendored zlib などが .so を生成する場合があるが、
+#      静的リンクには不要なため .a のみをコピーする
 for libdir in "${INSTALL_DIR}/lib" "${INSTALL_DIR}/lib64"; do
   if [ -d "${libdir}" ]; then
-    find "${libdir}" -maxdepth 1 -type f \( -name '*.a' -o -name '*.so*' \) \
+    find "${libdir}" -maxdepth 1 -type f -name '*.a' \
       -exec cp -a {} "${DST_3RD}/lib/" \;
   fi
 done
