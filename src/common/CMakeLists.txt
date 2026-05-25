@@ -12,8 +12,18 @@ find_package(Threads REQUIRED)
 # myapp_common 静的ライブラリ。
 # ここに含めるのは「特定の業務ロジックに依存しない汎用処理」。
 # 例: 幾何計算、文字列ユーティリティ、ロガー など。
+# ヘッダオンリーのモジュールも一覧に含める。
+# CMake はヘッダを単独でコンパイルしないため、列挙してもビルド時間には
+# 影響しないが、IDE のプロジェクトツリー表示や install(TARGETS ...) で
+# 取りこぼしを防ぐ目的でターゲットに紐付けておく。
 add_library(myapp_common
     logging.cpp
+    logging.h
+    vector3d.h
+    ecef_position.h
+    geo_coordinate.h
+    map_coordinate.h
+    coordinate_conversion.h
 )
 
 # include パスの公開設定。
