@@ -2,7 +2,7 @@
 
 #include "greet.h"
 
-TEST_CASE("greet returns a hello string", "[greet]") {
-    REQUIRE(myapp::greet("world") == "Hello, world!");
-    REQUIRE(myapp::greet("Claude") == "Hello, Claude!");
+TEST_CASE("Greet returns a hello string", "[greet]") {
+  REQUIRE(myapp::Greet("world") == "Hello, world!");
+  REQUIRE(myapp::Greet("Claude") == "Hello, Claude!");
 }

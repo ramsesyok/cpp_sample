@@ -31,14 +31,14 @@ cpp_sample/
 │   └── common/                 アプリ横断の共通処理
 │       ├── CMakeLists.txt      myapp_common ライブラリ定義
 │       ├── logging.h / .cpp    spdlog の初期化・shutdown
-│       └── polygon.h / .cpp    多角形点内外判定 (演算サンプル)
+│       └── vector3d.h          3次元ベクトル (演算サンプル、header-only)
 └── tests/
     ├── CMakeLists.txt          Catch2 amalgamated を共有 static lib 化 + test_greet
     ├── catch2/                 Catch2 v3 amalgamated (header + .cpp)
     ├── test_greet.cpp
     └── common/
-        ├── CMakeLists.txt      test_polygon
-        └── test_polygon.cpp
+        ├── CMakeLists.txt      test_vector3d
+        └── test_vector3d.cpp
 ```
 
 ## ビルド & テスト
@@ -53,10 +53,10 @@ ctest --test-dir build --output-on-failure
 
 ```powershell
 # CTest 経由 (登録名でフィルタ)
-ctest --test-dir build -R test_polygon --output-on-failure
+ctest --test-dir build -R test_vector3d --output-on-failure
 
 # 直接実行 (Catch2 のタグでフィルタ)
-./build/tests/common/test_polygon "[polygon]"
+./build/tests/common/test_vector3d "[vector3d]"
 ```
 
 ビルド構成の切替 (ロガーのコンパイル時レベルが変わる):
@@ -149,14 +149,15 @@ cmake --build build-cov --target coverage
 - [src/common/logging.h](src/common/logging.h) / [src/common/logging.cpp](src/common/logging.cpp) —
   spdlog の async ロガーを `console + rotating file` の 2 sink 構成で初期化。
   詳細は次節「ロギング方針」を参照。
-- [src/common/polygon.h](src/common/polygon.h) / [src/common/polygon.cpp](src/common/polygon.cpp) —
-  演算処理のサンプル。ホットループ内ではログを書かないルールの実例。
+- [src/common/vector3d.h](src/common/vector3d.h) —
+  演算処理のサンプル (header-only)。四則演算と内積を持つ 3 次元ベクトル型。
+  不変条件を持たないため `struct` で定義している例。
 
 ### テスト
 
 - [tests/test_greet.cpp](tests/test_greet.cpp) — モジュール = テスト実行ファイル
   方針の最小例。
-- [tests/common/test_polygon.cpp](tests/common/test_polygon.cpp) — Catch2 の
+- [tests/common/test_vector3d.cpp](tests/common/test_vector3d.cpp) — Catch2 の
   `SECTION` を使った分岐構造のサンプル。
 
 ## ロギング方針
