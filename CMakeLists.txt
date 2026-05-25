@@ -60,6 +60,7 @@ if(ENABLE_COVERAGE)
             COMMAND ${GCOVR_EXECUTABLE}
                 --root ${CMAKE_SOURCE_DIR}/src
                 --exclude ${CMAKE_SOURCE_DIR}/3rdparty
+                --exclude ${CMAKE_SOURCE_DIR}/tests/catch2
                 --html-details ${CMAKE_BINARY_DIR}/coverage/index.html
                 --print-summary
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}

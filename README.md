@@ -21,7 +21,7 @@ cpp_sample/
 ├── CLAUDE.md                   Claude Code 向けのリポジトリ説明
 ├── 3rdparty/                   サードパーティ依存 (ヘッダ + 必要ならビルド済みライブラリ)
 │   ├── INSTALL_grpc.md         gRPC のローカルインストール手順
-│   ├── include/                ヘッダ群 (catch2 / nlohmann / spdlog / grpc / absl 等)
+│   ├── include/                ヘッダ群 (nlohmann / spdlog / grpc / absl 等)
 │   ├── lib/                    gRPC とその依存のスタティックライブラリ群
 │   └── bin/                    protoc, grpc_cpp_plugin など
 ├── src/
@@ -34,6 +34,7 @@ cpp_sample/
 │       └── polygon.h / .cpp    多角形点内外判定 (演算サンプル)
 └── tests/
     ├── CMakeLists.txt          Catch2 amalgamated を共有 static lib 化 + test_greet
+    ├── catch2/                 Catch2 v3 amalgamated (header + .cpp)
     ├── test_greet.cpp
     └── common/
         ├── CMakeLists.txt      test_polygon
@@ -105,7 +106,7 @@ cmake --build build-cov --target coverage
 カバレッジ率と未実行行が確認できる。
 
 > **対象範囲**: `src/` 配下の本体コードのみ計測する。
-> `3rdparty/` (Catch2 など) は集計から除外される。
+> `3rdparty/` および `tests/catch2/` (Catch2 本体) は集計から除外される。
 
 ## サードパーティ依存
 
@@ -114,7 +115,7 @@ cmake --build build-cov --target coverage
 
 | ライブラリ | 形態 | 場所 | 役割 |
 |---|---|---|---|
-| Catch2 v3 | amalgamated (header + .cpp) | [3rdparty/include/catch2/](3rdparty/include/catch2/) | 単体テストフレームワーク |
+| Catch2 v3 | amalgamated (header + .cpp) | [tests/catch2/](tests/catch2/) | 単体テストフレームワーク |
 | nlohmann/json | single-header | [3rdparty/include/nlohmann/](3rdparty/include/nlohmann/) | JSON 入出力 |
 | spdlog | header-only | [3rdparty/include/spdlog/](3rdparty/include/spdlog/) | ロギング (async 構成で使用) |
 | gRPC + 依存群 | ビルド済みライブラリ | [3rdparty/include/](3rdparty/include/) / [3rdparty/lib/](3rdparty/lib/) / [3rdparty/bin/](3rdparty/bin/) | RPC |

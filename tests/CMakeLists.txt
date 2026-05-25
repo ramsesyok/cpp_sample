@@ -11,14 +11,14 @@
 # そこで一度だけ静的ライブラリとしてビルドし、各テスト実行ファイルから
 # リンクすることで、ビルド時間を大幅に短縮する。
 add_library(catch2_main STATIC
-    ${CMAKE_SOURCE_DIR}/3rdparty/include/catch2/catch_amalgamated.cpp
+    ${CMAKE_SOURCE_DIR}/tests/catch2/catch_amalgamated.cpp
 )
 
 # include パスを PUBLIC にしておくことで、
 # catch2_main をリンクするテスト側で #include <catch2/catch_amalgamated.hpp>
 # が解決できるようになる。
 target_include_directories(catch2_main PUBLIC
-    ${CMAKE_SOURCE_DIR}/3rdparty/include
+    ${CMAKE_SOURCE_DIR}/tests
 )
 
 # --- tests 直下のテスト実行ファイル: test_greet ---------------------

@@ -10,5 +10,5 @@ The repository is a scaffold. [src/](src/) is empty and there is no build system
 
 Third-party libraries live under [3rdparty/include/](3rdparty/include/) as in-tree headers, not as submodules or a package-manager manifest. Any build configuration must add `3rdparty/include` to the include path.
 
-- **Catch2 v3 (amalgamated)** — [3rdparty/include/catch2/](3rdparty/include/catch2/). Both the header and the `.cpp` are present, so tests link by compiling `catch_amalgamated.cpp` into the test binary (no separate Catch2 library build, no `CATCH_CONFIG_MAIN` macro — v3 provides its own `main`).
+- **Catch2 v3 (amalgamated)** — [tests/catch2/](tests/catch2/). Both the header and the `.cpp` are present, so tests link by compiling `catch_amalgamated.cpp` into the test binary (no separate Catch2 library build, no `CATCH_CONFIG_MAIN` macro — v3 provides its own `main`). `tests/` is added to the include path via `tests/CMakeLists.txt` so `#include <catch2/catch_amalgamated.hpp>` resolves.
 - **nlohmann/json (single-header)** — [3rdparty/include/nlohmann/](3rdparty/include/nlohmann/). Include `<nlohmann/json.hpp>`; `json_fwd.hpp` is available for forward declarations in headers.
