@@ -2,8 +2,6 @@
 
 namespace myapp {
 
-std::string greet(const std::string& name) {
-    return "Hello, " + name + "!";
-}
+std::string Greet(const std::string& name) { return "Hello, " + name + "!"; }
 
-}
+}  // namespace myapp

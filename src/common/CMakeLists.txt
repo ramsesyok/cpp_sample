@@ -13,13 +13,12 @@ find_package(Threads REQUIRED)
 # ここに含めるのは「特定の業務ロジックに依存しない汎用処理」。
 # 例: 幾何計算、文字列ユーティリティ、ロガー など。
 add_library(myapp_common
-    polygon.cpp
     logging.cpp
 )
 
 # include パスの公開設定。
 #   - ${CMAKE_SOURCE_DIR}/src を PUBLIC にすることで、myapp_common を
-#     リンクする側は #include "common/polygon.h" のように
+#     リンクする側は #include "common/vector3d.h" のように
 #     "フォルダ名/ヘッダ名" の形で書ける。
 #   - 3rdparty ヘッダ (spdlog, nlohmann/json 等) もここで通す。
 target_include_directories(myapp_common
