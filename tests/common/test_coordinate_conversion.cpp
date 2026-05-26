@@ -2,9 +2,9 @@
 #include <cmath>
 
 #include "common/coordinate_conversion.h"
-#include "common/ecef_position.h"
+#include "common/ecef_coordinate.h"
 
-using myapp::common::EcefPosition;
+using myapp::common::EcefCoordinate;
 using myapp::common::EcefToGeo;
 using myapp::common::GeoCoordinate;
 using myapp::common::GeoToEcef;
@@ -32,7 +32,7 @@ TEST_CASE("ToGeo: 度 -> ラジアン", "[coord_conv]") {
 TEST_CASE("GeoToEcef: 赤道・本初子午線・標高0", "[coord_conv][ecef]") {
   // φ=0, λ=0, h=0 -> (a, 0, 0)
   const GeoCoordinate kG{0.0, 0.0, 0.0};
-  const EcefPosition kP = GeoToEcef(kG);
+  const EcefCoordinate kP = GeoToEcef(kG);
   REQUIRE(kP.X() == Catch::Approx(6378137.0));
   REQUIRE(kP.Y() == Catch::Approx(0.0).margin(1e-6));
   REQUIRE(kP.Z() == Catch::Approx(0.0).margin(1e-6));
@@ -41,7 +41,7 @@ TEST_CASE("GeoToEcef: 赤道・本初子午線・標高0", "[coord_conv][ecef]")
 TEST_CASE("GeoToEcef: 赤道・東経90度・標高0", "[coord_conv][ecef]") {
   // φ=0, λ=π/2 -> (0, a, 0)
   const GeoCoordinate kG{0.0, 1.5707963267948966, 0.0};
-  const EcefPosition kP = GeoToEcef(kG);
+  const EcefCoordinate kP = GeoToEcef(kG);
   REQUIRE(kP.X() == Catch::Approx(0.0).margin(1e-6));
   REQUIRE(kP.Y() == Catch::Approx(6378137.0));
   REQUIRE(kP.Z() == Catch::Approx(0.0).margin(1e-6));
@@ -50,7 +50,7 @@ TEST_CASE("GeoToEcef: 赤道・東経90度・標高0", "[coord_conv][ecef]") {
 TEST_CASE("GeoToEcef: 北極", "[coord_conv][ecef]") {
   // φ=π/2 -> (0, 0, b)  ここで b = a*(1-f) ≒ 6356752.3142 (WGS84 短半径)
   const GeoCoordinate kG{1.5707963267948966, 0.0, 0.0};
-  const EcefPosition kP = GeoToEcef(kG);
+  const EcefCoordinate kP = GeoToEcef(kG);
   REQUIRE(kP.X() == Catch::Approx(0.0).margin(1e-6));
   REQUIRE(kP.Y() == Catch::Approx(0.0).margin(1e-6));
   REQUIRE(kP.Z() == Catch::Approx(6356752.314245179));
@@ -59,7 +59,7 @@ TEST_CASE("GeoToEcef: 北極", "[coord_conv][ecef]") {
 TEST_CASE("GeoToEcef: 標高が直接 X に加算される (赤道)", "[coord_conv][ecef]") {
   // φ=0, λ=0, h=1000 -> (a+1000, 0, 0)
   const GeoCoordinate kG{0.0, 0.0, 1000.0};
-  const EcefPosition kP = GeoToEcef(kG);
+  const EcefCoordinate kP = GeoToEcef(kG);
   REQUIRE(kP.X() == Catch::Approx(6378137.0 + 1000.0));
   REQUIRE(kP.Y() == Catch::Approx(0.0).margin(1e-6));
   REQUIRE(kP.Z() == Catch::Approx(0.0).margin(1e-6));
@@ -69,7 +69,7 @@ TEST_CASE("GeoToEcef: 原点からの距離が a に近い (赤道)", "[coord_co
   // 赤道上の任意の経度で、原点からの距離は a (= 6378137 m) になるはず。
   // ハードコードした参考値に依存せず、不変量で検証する。
   const GeoCoordinate kG{0.0, 2.5, 0.0};  // 経度は適当な値
-  const EcefPosition kP = GeoToEcef(kG);
+  const EcefCoordinate kP = GeoToEcef(kG);
   const double kDist = std::sqrt((kP.X() * kP.X()) + (kP.Y() * kP.Y()) + (kP.Z() * kP.Z()));
   REQUIRE(kDist == Catch::Approx(6378137.0));
   REQUIRE(kP.Z() == Catch::Approx(0.0).margin(1e-6));
@@ -85,7 +85,7 @@ TEST_CASE("変換ラウンドトリップ (deg <-> rad)", "[coord_conv]") {
 
 TEST_CASE("EcefToGeo: 赤道・本初子午線", "[coord_conv][ecef]") {
   // (a, 0, 0) -> (φ=0, λ=0, h=0)
-  const GeoCoordinate kG = EcefToGeo(EcefPosition{6378137.0, 0.0, 0.0});
+  const GeoCoordinate kG = EcefToGeo(EcefCoordinate{6378137.0, 0.0, 0.0});
   REQUIRE(kG.Latitude() == Catch::Approx(0.0).margin(1e-12));
   REQUIRE(kG.Longitude() == Catch::Approx(0.0).margin(1e-12));
   REQUIRE(kG.Altitude() == Catch::Approx(0.0).margin(1e-6));
@@ -93,7 +93,7 @@ TEST_CASE("EcefToGeo: 赤道・本初子午線", "[coord_conv][ecef]") {
 
 TEST_CASE("EcefToGeo: 赤道・東経90度", "[coord_conv][ecef]") {
   // (0, a, 0) -> (φ=0, λ=π/2, h=0)
-  const GeoCoordinate kG = EcefToGeo(EcefPosition{0.0, 6378137.0, 0.0});
+  const GeoCoordinate kG = EcefToGeo(EcefCoordinate{0.0, 6378137.0, 0.0});
   REQUIRE(kG.Latitude() == Catch::Approx(0.0).margin(1e-12));
   REQUIRE(kG.Longitude() == Catch::Approx(1.5707963267948966));
   REQUIRE(kG.Altitude() == Catch::Approx(0.0).margin(1e-6));
@@ -102,14 +102,14 @@ TEST_CASE("EcefToGeo: 赤道・東経90度", "[coord_conv][ecef]") {
 TEST_CASE("EcefToGeo: 北極 (極近傍ガード経路)", "[coord_conv][ecef]") {
   // (0, 0, b) -> (φ=π/2, λ=任意 (本実装では 0), h=0)
   // b = a(1-f) ≒ 6356752.3142
-  const GeoCoordinate kG = EcefToGeo(EcefPosition{0.0, 0.0, 6356752.314245179});
+  const GeoCoordinate kG = EcefToGeo(EcefCoordinate{0.0, 0.0, 6356752.314245179});
   REQUIRE(kG.Latitude() == Catch::Approx(1.5707963267948966));
   REQUIRE(kG.Altitude() == Catch::Approx(0.0).margin(1e-6));
 }
 
 TEST_CASE("EcefToGeo: 南極上空 1000m", "[coord_conv][ecef]") {
   // 南極の真上、楕円体高 1000m。Z = -(b + 1000)、X=Y=0 の自転軸上ケース。
-  const GeoCoordinate kG = EcefToGeo(EcefPosition{0.0, 0.0, -(6356752.314245179 + 1000.0)});
+  const GeoCoordinate kG = EcefToGeo(EcefCoordinate{0.0, 0.0, -(6356752.314245179 + 1000.0)});
   REQUIRE(kG.Latitude() == Catch::Approx(-1.5707963267948966));
   REQUIRE(kG.Altitude() == Catch::Approx(1000.0).margin(1e-6));
 }

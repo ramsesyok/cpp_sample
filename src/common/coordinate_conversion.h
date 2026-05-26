@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-#include "common/ecef_position.h"
+#include "common/ecef_coordinate.h"
 #include "common/geo_coordinate.h"
 #include "common/map_coordinate.h"
 
@@ -76,7 +76,7 @@ inline GeoCoordinate ToGeo(const MapCoordinate& m) {
  * @param g  ラジアン基準のジオデティック座標。
  * @return WGS84 楕円体上の ECEF 位置 [m]。
  */
-inline EcefPosition GeoToEcef(const GeoCoordinate& g) {
+inline EcefCoordinate GeoToEcef(const GeoCoordinate& g) {
   const double kSinLat = std::sin(g.Latitude());
   const double kCosLat = std::cos(g.Latitude());
   const double kSinLon = std::sin(g.Longitude());
@@ -90,7 +90,7 @@ inline EcefPosition GeoToEcef(const GeoCoordinate& g) {
   const double kY = kNPlusH * kCosLat * kSinLon;
   const double kZ = ((kN * (1.0 - wgs84::kFirstEccentricitySq)) + g.Altitude()) * kSinLat;
 
-  return EcefPosition{kX, kY, kZ};
+  return EcefCoordinate{kX, kY, kZ};
 }
 
 /**
@@ -107,7 +107,7 @@ inline EcefPosition GeoToEcef(const GeoCoordinate& g) {
  * @param p_ecef  ECEF 位置 [m]。
  * @return WGS84 楕円体上のジオデティック座標 (ラジアン基準)。
  */
-inline GeoCoordinate EcefToGeo(const EcefPosition& p_ecef) {
+inline GeoCoordinate EcefToGeo(const EcefCoordinate& p_ecef) {
   constexpr double kA = wgs84::kSemiMajorAxisM;
   constexpr double kF = wgs84::kFlattening;
   constexpr double kE2 = wgs84::kFirstEccentricitySq;
