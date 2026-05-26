@@ -1,5 +1,5 @@
-#ifndef MYAPP_COMMON_COORDINATE_CONVERSION_H_
-#define MYAPP_COMMON_COORDINATE_CONVERSION_H_
+#ifndef MYAPP_COMMON_COORDINATE_CONVERSION_H
+#define MYAPP_COMMON_COORDINATE_CONVERSION_H
 
 #include <cmath>
 
@@ -25,8 +25,7 @@ inline constexpr double kSemiMajorAxisM = 6378137.0;
 /** @brief WGS84 楕円体の扁平率 f = 1/298.257223563。 */
 inline constexpr double kFlattening = 1.0 / 298.257223563;
 /** @brief 第一離心率の二乗 e² = 2f - f²。 */
-inline constexpr double kFirstEccentricitySq =
-    kFlattening * (2.0 - kFlattening);
+inline constexpr double kFirstEccentricitySq = kFlattening * (2.0 - kFlattening);
 
 }  // namespace wgs84
 
@@ -39,9 +38,9 @@ inline MapCoordinate ToMap(const GeoCoordinate& g) {
   // 180 / pi。pi は M_PI が処理系依存なので定数を直書きする。
   constexpr double kRadToDeg = 57.29577951308232087679815481410517;
   return MapCoordinate{
-      g.latitude() * kRadToDeg,
-      g.longitude() * kRadToDeg,
-      g.altitude(),
+      g.Latitude() * kRadToDeg,
+      g.Longitude() * kRadToDeg,
+      g.Altitude(),
   };
 }
 
@@ -54,9 +53,9 @@ inline GeoCoordinate ToGeo(const MapCoordinate& m) {
   // pi / 180。
   constexpr double kDegToRad = 0.01745329251994329576923690768488613;
   return GeoCoordinate{
-      m.latitude_deg() * kDegToRad,
-      m.longitude_deg() * kDegToRad,
-      m.altitude_m(),
+      m.LatitudeDeg() * kDegToRad,
+      m.LongitudeDeg() * kDegToRad,
+      m.AltitudeM(),
   };
 }
 
@@ -78,22 +77,20 @@ inline GeoCoordinate ToGeo(const MapCoordinate& m) {
  * @return WGS84 楕円体上の ECEF 位置 [m]。
  */
 inline EcefPosition GeoToEcef(const GeoCoordinate& g) {
-  const double sin_lat = std::sin(g.latitude());
-  const double cos_lat = std::cos(g.latitude());
-  const double sin_lon = std::sin(g.longitude());
-  const double cos_lon = std::cos(g.longitude());
+  const double kSinLat = std::sin(g.Latitude());
+  const double kCosLat = std::cos(g.Latitude());
+  const double kSinLon = std::sin(g.Longitude());
+  const double kCosLon = std::cos(g.Longitude());
 
-  const double n =
-      wgs84::kSemiMajorAxisM /
-      std::sqrt(1.0 - wgs84::kFirstEccentricitySq * sin_lat * sin_lat);
-  const double n_plus_h = n + g.altitude();
+  const double kN =
+      wgs84::kSemiMajorAxisM / std::sqrt(1.0 - (wgs84::kFirstEccentricitySq * kSinLat * kSinLat));
+  const double kNPlusH = kN + g.Altitude();
 
-  const double x = n_plus_h * cos_lat * cos_lon;
-  const double y = n_plus_h * cos_lat * sin_lon;
-  const double z =
-      (n * (1.0 - wgs84::kFirstEccentricitySq) + g.altitude()) * sin_lat;
+  const double kX = kNPlusH * kCosLat * kCosLon;
+  const double kY = kNPlusH * kCosLat * kSinLon;
+  const double kZ = ((kN * (1.0 - wgs84::kFirstEccentricitySq)) + g.Altitude()) * kSinLat;
 
-  return EcefPosition{x, y, z};
+  return EcefPosition{kX, kY, kZ};
 }
 
 /**
@@ -111,53 +108,52 @@ inline EcefPosition GeoToEcef(const GeoCoordinate& g) {
  * @return WGS84 楕円体上のジオデティック座標 (ラジアン基準)。
  */
 inline GeoCoordinate EcefToGeo(const EcefPosition& p_ecef) {
-  constexpr double a = wgs84::kSemiMajorAxisM;
-  constexpr double f = wgs84::kFlattening;
-  constexpr double e2 = wgs84::kFirstEccentricitySq;
-  constexpr double b = a * (1.0 - f);       // 短半径
-  constexpr double ep2 = e2 / (1.0 - e2);   // 第二離心率の二乗 e'²
+  constexpr double kA = wgs84::kSemiMajorAxisM;
+  constexpr double kF = wgs84::kFlattening;
+  constexpr double kE2 = wgs84::kFirstEccentricitySq;
+  constexpr double kB = kA * (1.0 - kF);      // 短半径
+  constexpr double kEp2 = kE2 / (1.0 - kE2);  // 第二離心率の二乗 e'²
   constexpr double kHalfPi = 1.5707963267948966;
 
-  const double x = p_ecef.x();
-  const double y = p_ecef.y();
-  const double z = p_ecef.z();
+  const double kX = p_ecef.X();
+  const double kY = p_ecef.Y();
+  const double kZ = p_ecef.Z();
 
-  const double p = std::sqrt(x * x + y * y);
-  const double lon = std::atan2(y, x);
+  const double kP = std::sqrt((kX * kX) + (kY * kY));
+  const double kLon = std::atan2(kY, kX);
 
   // 自転軸上 (p ≈ 0): 経度は不定なので 0 を返し、緯度は ±π/2、
   // 高度は Z 軸上での原点からの距離から短半径 b を引いた値。
-  if (p == 0.0) {
-    const double lat = (z >= 0.0) ? kHalfPi : -kHalfPi;
-    const double h = std::abs(z) - b;
-    return GeoCoordinate{lat, 0.0, h};
+  if (kP == 0.0) {
+    const double kLatPole = (kZ >= 0.0) ? kHalfPi : -kHalfPi;
+    const double kHPole = std::abs(kZ) - kB;
+    return GeoCoordinate{kLatPole, 0.0, kHPole};
   }
 
   // 補助緯度 β の初期推定。
-  const double beta = std::atan2(z * a, p * b);
-  const double sin_beta = std::sin(beta);
-  const double cos_beta = std::cos(beta);
+  const double kBeta = std::atan2(kZ * kA, kP * kB);
+  const double kSinBeta = std::sin(kBeta);
+  const double kCosBeta = std::cos(kBeta);
 
   // Bowring の閉形式による緯度 φ。
-  const double lat =
-      std::atan2(z + ep2 * b * sin_beta * sin_beta * sin_beta,
-                 p - e2 * a * cos_beta * cos_beta * cos_beta);
+  const double kLat = std::atan2(kZ + (kEp2 * kB * kSinBeta * kSinBeta * kSinBeta),
+                                 kP - (kE2 * kA * kCosBeta * kCosBeta * kCosBeta));
 
-  const double sin_lat = std::sin(lat);
-  const double cos_lat = std::cos(lat);
-  const double n = a / std::sqrt(1.0 - e2 * sin_lat * sin_lat);
+  const double kSinLat = std::sin(kLat);
+  const double kCosLat = std::cos(kLat);
+  const double kN = kA / std::sqrt(1.0 - (kE2 * kSinLat * kSinLat));
 
   // 高度。極近傍では p/cosφ が発散するため、Z 軸方向の式に切り替える。
-  double h;
-  if (std::abs(cos_lat) > 1e-10) {
-    h = p / cos_lat - n;
+  double h = 0.0;
+  if (std::abs(kCosLat) > 1e-10) {
+    h = (kP / kCosLat) - kN;
   } else {
-    h = std::abs(z) / std::abs(sin_lat) - n * (1.0 - e2);
+    h = (std::abs(kZ) / std::abs(kSinLat)) - (kN * (1.0 - kE2));
   }
 
-  return GeoCoordinate{lat, lon, h};
+  return GeoCoordinate{kLat, kLon, h};
 }
 
 }  // namespace myapp::common
 
-#endif  // MYAPP_COMMON_COORDINATE_CONVERSION_H_
+#endif  // MYAPP_COMMON_COORDINATE_CONVERSION_H

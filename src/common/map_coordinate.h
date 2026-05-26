@@ -1,5 +1,5 @@
-#ifndef MYAPP_COMMON_MAP_COORDINATE_H_
-#define MYAPP_COMMON_MAP_COORDINATE_H_
+#ifndef MYAPP_COMMON_MAP_COORDINATE_H
+#define MYAPP_COMMON_MAP_COORDINATE_H
 
 namespace myapp::common {
 
@@ -19,16 +19,20 @@ class MapCoordinate {
    * @param altitude_m     楕円体高 [m]。
    */
   MapCoordinate(double latitude_deg, double longitude_deg, double altitude_m)
-      : lat_deg_{latitude_deg},
-        lon_deg_{longitude_deg},
-        alt_m_{altitude_m} {}
+      : lat_deg_{latitude_deg}, lon_deg_{longitude_deg}, alt_m_{altitude_m} {}
 
   /** @brief 緯度 [deg]。 */
-  double latitude_deg() const { return lat_deg_; }
+  [[nodiscard]] double LatitudeDeg() const {
+    return lat_deg_;
+  }
   /** @brief 経度 [deg]。 */
-  double longitude_deg() const { return lon_deg_; }
+  [[nodiscard]] double LongitudeDeg() const {
+    return lon_deg_;
+  }
   /** @brief 楕円体高 [m]。 */
-  double altitude_m() const { return alt_m_; }
+  [[nodiscard]] double AltitudeM() const {
+    return alt_m_;
+  }
 
  private:
   double lat_deg_;
@@ -38,4 +42,4 @@ class MapCoordinate {
 
 }  // namespace myapp::common
 
-#endif  // MYAPP_COMMON_MAP_COORDINATE_H_
+#endif  // MYAPP_COMMON_MAP_COORDINATE_H

@@ -12,25 +12,23 @@ namespace myapp::common::logging {
 namespace {
 
 constexpr const char* kLoggerName = "myapp";
-constexpr const char* kPattern =
-    "[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] [thr %t] %v";
+constexpr const char* kPattern = "[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] [thr %t] %v";
 
 }  // namespace
 
 void Init(const Config& cfg) {
   // 非同期ロガーのバックエンド (スレッドプール) を初期化。
   // ※プロセス中で 1 度だけ呼ぶ。
-  spdlog::init_thread_pool(cfg.async_queue_size, cfg.async_thread_count);
+  spdlog::init_thread_pool(cfg.async_queue_size_, cfg.async_thread_count_);
 
   // コンソール sink (色付き、stdout)。
-  auto console_sink =
-      std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-  console_sink->set_level(cfg.console_level);
+  auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+  console_sink->set_level(cfg.console_level_);
 
   // ローテーティングファイル sink。
   auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
-      cfg.log_file_path, cfg.max_file_size_bytes, cfg.max_files);
-  file_sink->set_level(cfg.file_level);
+      cfg.log_file_path_, cfg.max_file_size_bytes_, cfg.max_files_);
+  file_sink->set_level(cfg.file_level_);
 
   std::vector<spdlog::sink_ptr> sinks{console_sink, file_sink};
 

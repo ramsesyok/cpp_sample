@@ -1,5 +1,5 @@
-#ifndef MYAPP_COMMON_GEO_COORDINATE_H_
-#define MYAPP_COMMON_GEO_COORDINATE_H_
+#ifndef MYAPP_COMMON_GEO_COORDINATE_H
+#define MYAPP_COMMON_GEO_COORDINATE_H
 
 namespace myapp::common {
 
@@ -19,16 +19,20 @@ class GeoCoordinate {
    * @param altitude_m     楕円体高 [m]。
    */
   GeoCoordinate(double latitude_rad, double longitude_rad, double altitude_m)
-      : lat_rad_{latitude_rad},
-        lon_rad_{longitude_rad},
-        alt_m_{altitude_m} {}
+      : lat_rad_{latitude_rad}, lon_rad_{longitude_rad}, alt_m_{altitude_m} {}
 
   /** @brief 緯度 [rad]。 */
-  double latitude() const { return lat_rad_; }
+  [[nodiscard]] double Latitude() const {
+    return lat_rad_;
+  }
   /** @brief 経度 [rad]。 */
-  double longitude() const { return lon_rad_; }
+  [[nodiscard]] double Longitude() const {
+    return lon_rad_;
+  }
   /** @brief 楕円体高 [m]。 */
-  double altitude() const { return alt_m_; }
+  [[nodiscard]] double Altitude() const {
+    return alt_m_;
+  }
 
  private:
   double lat_rad_;
@@ -38,4 +42,4 @@ class GeoCoordinate {
 
 }  // namespace myapp::common
 
-#endif  // MYAPP_COMMON_GEO_COORDINATE_H_
+#endif  // MYAPP_COMMON_GEO_COORDINATE_H

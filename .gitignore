@@ -12,3 +12,4 @@
 3rdparty/lib/*.a
 3rdparty/lib/*.so
 build/
+.claude

@@ -1,5 +1,5 @@
-#ifndef MYAPP_GREET_H_
-#define MYAPP_GREET_H_
+#ifndef MYAPP_GREET_H
+#define MYAPP_GREET_H
 
 #include <string>
 
@@ -14,4 +14,4 @@ std::string Greet(const std::string& name);
 
 }  // namespace myapp
 
-#endif  // MYAPP_GREET_H_
+#endif  // MYAPP_GREET_H

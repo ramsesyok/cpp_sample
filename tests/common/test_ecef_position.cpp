@@ -1,5 +1,4 @@
 #include <catch2/catch_amalgamated.hpp>
-
 #include <type_traits>
 
 #include "common/ecef_position.h"
@@ -9,28 +8,28 @@ using myapp::common::EcefPosition;
 using myapp::common::Vector3D;
 
 TEST_CASE("EcefPosition: コンストラクタとアクセサ", "[ecef]") {
-  const EcefPosition p{1000.0, -2000.0, 3000.0};
-  REQUIRE(p.x() == Catch::Approx(1000.0));
-  REQUIRE(p.y() == Catch::Approx(-2000.0));
-  REQUIRE(p.z() == Catch::Approx(3000.0));
+  const EcefPosition kP{1000.0, -2000.0, 3000.0};
+  REQUIRE(kP.X() == Catch::Approx(1000.0));
+  REQUIRE(kP.Y() == Catch::Approx(-2000.0));
+  REQUIRE(kP.Z() == Catch::Approx(3000.0));
 }
 
 TEST_CASE("EcefPosition: 位置 - 位置 は変位ベクトル", "[ecef]") {
-  const EcefPosition a{10.0, 20.0, 30.0};
-  const EcefPosition b{1.0, 2.0, 3.0};
-  const Vector3D d = a - b;
-  REQUIRE(d.x == Catch::Approx(9.0));
-  REQUIRE(d.y == Catch::Approx(18.0));
-  REQUIRE(d.z == Catch::Approx(27.0));
+  const EcefPosition kA{10.0, 20.0, 30.0};
+  const EcefPosition kB{1.0, 2.0, 3.0};
+  const Vector3D kD = kA - kB;
+  REQUIRE(kD.x_ == Catch::Approx(9.0));
+  REQUIRE(kD.y_ == Catch::Approx(18.0));
+  REQUIRE(kD.z_ == Catch::Approx(27.0));
 }
 
 TEST_CASE("EcefPosition: 位置 + 変位 は新しい位置", "[ecef]") {
-  const EcefPosition origin{100.0, 200.0, 300.0};
-  const Vector3D disp{1.0, -2.0, 3.0};
-  const EcefPosition moved = origin + disp;
-  REQUIRE(moved.x() == Catch::Approx(101.0));
-  REQUIRE(moved.y() == Catch::Approx(198.0));
-  REQUIRE(moved.z() == Catch::Approx(303.0));
+  const EcefPosition kOrigin{100.0, 200.0, 300.0};
+  const Vector3D kDisp{1.0, -2.0, 3.0};
+  const EcefPosition kMoved = kOrigin + kDisp;
+  REQUIRE(kMoved.X() == Catch::Approx(101.0));
+  REQUIRE(kMoved.Y() == Catch::Approx(198.0));
+  REQUIRE(kMoved.Z() == Catch::Approx(303.0));
 }
 
 // 静的アサーション: 型安全の確認 (コンパイル時に検証される設計上の不変条件)。

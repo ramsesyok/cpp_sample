@@ -1,5 +1,5 @@
-#ifndef MYAPP_COMMON_LOGGING_H_
-#define MYAPP_COMMON_LOGGING_H_
+#ifndef MYAPP_COMMON_LOGGING_H
+#define MYAPP_COMMON_LOGGING_H
 
 // ============================================================
 // SPDLOG_ACTIVE_LEVEL はビルド構成ごとに CMake から定義する。
@@ -26,7 +26,7 @@ namespace myapp::common::logging {
  */
 struct Config {
   /** @brief ファイル出力先 (ディレクトリは存在していなくても spdlog が作る)。 */
-  std::string log_file_path = "logs/myapp.log";
+  std::string log_file_path_ = "logs/myapp.log";
 
   /**
    * @brief コンソール sink のランタイムレベル。
@@ -34,19 +34,19 @@ struct Config {
    * コンパイル時に SPDLOG_ACTIVE_LEVEL より低いレベルは
    * どのみち消えるため、ここで TRACE にしても無意味なことに注意。
    */
-  spdlog::level::level_enum console_level = spdlog::level::info;
+  spdlog::level::level_enum console_level_ = spdlog::level::info;
   /** @brief ファイル sink のランタイムレベル。 */
-  spdlog::level::level_enum file_level = spdlog::level::debug;
+  spdlog::level::level_enum file_level_ = spdlog::level::debug;
 
   /** @brief 非同期キューの長さ (メッセージ件数、2 のべき乗推奨)。 */
-  std::size_t async_queue_size = 8192;
+  std::size_t async_queue_size_ = 8192;
   /** @brief バックグラウンド flush スレッド数。 */
-  std::size_t async_thread_count = 1;
+  std::size_t async_thread_count_ = 1;
 
   /** @brief ローテーティングファイル sink の 1 ファイル最大サイズ [bytes]。 */
-  std::size_t max_file_size_bytes = 5 * 1024 * 1024;  // 5 MiB
+  std::size_t max_file_size_bytes_ = std::size_t{5} * 1024 * 1024;  // 5 MiB
   /** @brief 残す世代数。 */
-  std::size_t max_files = 3;
+  std::size_t max_files_ = 3;
 };
 
 /**
@@ -78,4 +78,4 @@ void Shutdown();
 //   この expensive_calc() は Release ビルドでは呼ばれもしない。
 // ============================================================
 
-#endif  // MYAPP_COMMON_LOGGING_H_
+#endif  // MYAPP_COMMON_LOGGING_H
