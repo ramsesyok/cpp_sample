@@ -34,15 +34,6 @@ struct Attitude {
   constexpr Attitude operator/(double s) const {
     return {phi_ / s, theta_ / s, psi_ / s};
   }
-
-  /**
-   * @brief 内積を返す。
-   * @param rhs  相手側姿勢角。
-   * @return 内積値 phi·phi' + theta·theta' + psi·psi'。
-   */
-  [[nodiscard]] constexpr double Dot(const Attitude& rhs) const {
-    return (phi_ * rhs.phi_) + (theta_ * rhs.theta_) + (psi_ * rhs.psi_);
-  }
 };
 
 /**

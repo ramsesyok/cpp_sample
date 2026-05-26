@@ -4,12 +4,12 @@
 #include <cmath>
 
 #include "common/coordinate_conversion.h"
-#include "common/ecef_coordinate.h"
+#include "common/global_coordinate.h"
 
-using myapp::common::EcefCoordinate;
-using myapp::common::EcefToGeo;
+using myapp::common::GlobalCoordinate;
+using myapp::common::GlobalToGeo;
 using myapp::common::GeoCoordinate;
-using myapp::common::GeoToEcef;
+using myapp::common::GeoToGlobal;
 using myapp::common::MapCoordinate;
 using myapp::common::ToGeo;
 using myapp::common::ToMap;
@@ -31,47 +31,47 @@ TEST_CASE("ToGeo: 度 -> ラジアン", "[coord_conv]") {
   REQUIRE(kG.Altitude() == Catch::Approx(50.0));
 }
 
-TEST_CASE("GeoToEcef: 赤道・本初子午線・標高0", "[coord_conv][ecef]") {
+TEST_CASE("GeoToGlobal: 赤道・本初子午線・標高0", "[coord_conv][ecef]") {
   // φ=0, λ=0, h=0 -> (a, 0, 0)
   const GeoCoordinate kG{0.0, 0.0, 0.0};
-  const EcefCoordinate kP = GeoToEcef(kG);
+  const GlobalCoordinate kP = GeoToGlobal(kG);
   REQUIRE(kP.X() == Catch::Approx(6378137.0));
   REQUIRE(kP.Y() == Catch::Approx(0.0).margin(1e-6));
   REQUIRE(kP.Z() == Catch::Approx(0.0).margin(1e-6));
 }
 
-TEST_CASE("GeoToEcef: 赤道・東経90度・標高0", "[coord_conv][ecef]") {
+TEST_CASE("GeoToGlobal: 赤道・東経90度・標高0", "[coord_conv][ecef]") {
   // φ=0, λ=π/2 -> (0, a, 0)
   const GeoCoordinate kG{0.0, 1.5707963267948966, 0.0};
-  const EcefCoordinate kP = GeoToEcef(kG);
+  const GlobalCoordinate kP = GeoToGlobal(kG);
   REQUIRE(kP.X() == Catch::Approx(0.0).margin(1e-6));
   REQUIRE(kP.Y() == Catch::Approx(6378137.0));
   REQUIRE(kP.Z() == Catch::Approx(0.0).margin(1e-6));
 }
 
-TEST_CASE("GeoToEcef: 北極", "[coord_conv][ecef]") {
+TEST_CASE("GeoToGlobal: 北極", "[coord_conv][ecef]") {
   // φ=π/2 -> (0, 0, b)  ここで b = a*(1-f) ≒ 6356752.3142 (WGS84 短半径)
   const GeoCoordinate kG{1.5707963267948966, 0.0, 0.0};
-  const EcefCoordinate kP = GeoToEcef(kG);
+  const GlobalCoordinate kP = GeoToGlobal(kG);
   REQUIRE(kP.X() == Catch::Approx(0.0).margin(1e-6));
   REQUIRE(kP.Y() == Catch::Approx(0.0).margin(1e-6));
   REQUIRE(kP.Z() == Catch::Approx(6356752.314245179));
 }
 
-TEST_CASE("GeoToEcef: 標高が直接 X に加算される (赤道)", "[coord_conv][ecef]") {
+TEST_CASE("GeoToGlobal: 標高が直接 X に加算される (赤道)", "[coord_conv][ecef]") {
   // φ=0, λ=0, h=1000 -> (a+1000, 0, 0)
   const GeoCoordinate kG{0.0, 0.0, 1000.0};
-  const EcefCoordinate kP = GeoToEcef(kG);
+  const GlobalCoordinate kP = GeoToGlobal(kG);
   REQUIRE(kP.X() == Catch::Approx(6378137.0 + 1000.0));
   REQUIRE(kP.Y() == Catch::Approx(0.0).margin(1e-6));
   REQUIRE(kP.Z() == Catch::Approx(0.0).margin(1e-6));
 }
 
-TEST_CASE("GeoToEcef: 原点からの距離が a に近い (赤道)", "[coord_conv][ecef]") {
+TEST_CASE("GeoToGlobal: 原点からの距離が a に近い (赤道)", "[coord_conv][ecef]") {
   // 赤道上の任意の経度で、原点からの距離は a (= 6378137 m) になるはず。
   // ハードコードした参考値に依存せず、不変量で検証する。
   const GeoCoordinate kG{0.0, 2.5, 0.0};  // 経度は適当な値
-  const EcefCoordinate kP = GeoToEcef(kG);
+  const GlobalCoordinate kP = GeoToGlobal(kG);
   const double kDist = std::sqrt((kP.X() * kP.X()) + (kP.Y() * kP.Y()) + (kP.Z() * kP.Z()));
   REQUIRE(kDist == Catch::Approx(6378137.0));
   REQUIRE(kP.Z() == Catch::Approx(0.0).margin(1e-6));
@@ -85,39 +85,39 @@ TEST_CASE("変換ラウンドトリップ (deg <-> rad)", "[coord_conv]") {
   REQUIRE(kRound.AltitudeM() == Catch::Approx(kOriginal.AltitudeM()));
 }
 
-TEST_CASE("EcefToGeo: 赤道・本初子午線", "[coord_conv][ecef]") {
+TEST_CASE("GlobalToGeo: 赤道・本初子午線", "[coord_conv][ecef]") {
   // (a, 0, 0) -> (φ=0, λ=0, h=0)
-  const GeoCoordinate kG = EcefToGeo(EcefCoordinate{6378137.0, 0.0, 0.0});
+  const GeoCoordinate kG = GlobalToGeo(GlobalCoordinate{6378137.0, 0.0, 0.0});
   REQUIRE(kG.Latitude() == Catch::Approx(0.0).margin(1e-12));
   REQUIRE(kG.Longitude() == Catch::Approx(0.0).margin(1e-12));
   REQUIRE(kG.Altitude() == Catch::Approx(0.0).margin(1e-6));
 }
 
-TEST_CASE("EcefToGeo: 赤道・東経90度", "[coord_conv][ecef]") {
+TEST_CASE("GlobalToGeo: 赤道・東経90度", "[coord_conv][ecef]") {
   // (0, a, 0) -> (φ=0, λ=π/2, h=0)
-  const GeoCoordinate kG = EcefToGeo(EcefCoordinate{0.0, 6378137.0, 0.0});
+  const GeoCoordinate kG = GlobalToGeo(GlobalCoordinate{0.0, 6378137.0, 0.0});
   REQUIRE(kG.Latitude() == Catch::Approx(0.0).margin(1e-12));
   REQUIRE(kG.Longitude() == Catch::Approx(1.5707963267948966));
   REQUIRE(kG.Altitude() == Catch::Approx(0.0).margin(1e-6));
 }
 
-TEST_CASE("EcefToGeo: 北極 (極近傍ガード経路)", "[coord_conv][ecef]") {
+TEST_CASE("GlobalToGeo: 北極 (極近傍ガード経路)", "[coord_conv][ecef]") {
   // (0, 0, b) -> (φ=π/2, λ=任意 (本実装では 0), h=0)
   // b = a(1-f) ≒ 6356752.3142
-  const GeoCoordinate kG = EcefToGeo(EcefCoordinate{0.0, 0.0, 6356752.314245179});
+  const GeoCoordinate kG = GlobalToGeo(GlobalCoordinate{0.0, 0.0, 6356752.314245179});
   REQUIRE(kG.Latitude() == Catch::Approx(1.5707963267948966));
   REQUIRE(kG.Altitude() == Catch::Approx(0.0).margin(1e-6));
 }
 
-TEST_CASE("EcefToGeo: 南極上空 1000m", "[coord_conv][ecef]") {
+TEST_CASE("GlobalToGeo: 南極上空 1000m", "[coord_conv][ecef]") {
   // 南極の真上、楕円体高 1000m。Z = -(b + 1000)、X=Y=0 の自転軸上ケース。
-  const GeoCoordinate kG = EcefToGeo(EcefCoordinate{0.0, 0.0, -(6356752.314245179 + 1000.0)});
+  const GeoCoordinate kG = GlobalToGeo(GlobalCoordinate{0.0, 0.0, -(6356752.314245179 + 1000.0)});
   REQUIRE(kG.Latitude() == Catch::Approx(-1.5707963267948966));
   REQUIRE(kG.Altitude() == Catch::Approx(1000.0).margin(1e-6));
 }
 
 TEST_CASE("ecef <-> geo ラウンドトリップ (各種地点)", "[coord_conv][ecef]") {
-  // 様々な (緯度, 経度, 高度) を GeoToEcef -> EcefToGeo して元に戻ることを
+  // 様々な (緯度, 経度, 高度) を GeoToGlobal -> GlobalToGeo して元に戻ることを
   // 確認する。Bowring 法は地表近傍で機械精度に収束するので、margin/epsilon
   // は厳しく取ってよい。
   struct Case {
@@ -136,7 +136,7 @@ TEST_CASE("ecef <-> geo ラウンドトリップ (各種地点)", "[coord_conv][
 
   for (const auto& c : kCases) {
     const GeoCoordinate kOriginal = ToGeo(MapCoordinate{c.lat_deg_, c.lon_deg_, c.alt_m_});
-    const GeoCoordinate kRound = EcefToGeo(GeoToEcef(kOriginal));
+    const GeoCoordinate kRound = GlobalToGeo(GeoToGlobal(kOriginal));
     INFO("case lat_deg=" << c.lat_deg_ << " lon_deg=" << c.lon_deg_ << " alt_m=" << c.alt_m_);
     REQUIRE(kRound.Latitude() == Catch::Approx(kOriginal.Latitude()).margin(1e-10));
     REQUIRE(kRound.Longitude() == Catch::Approx(kOriginal.Longitude()).margin(1e-10));

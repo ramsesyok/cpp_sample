@@ -33,7 +33,7 @@ cpp_sample/
 │       ├── logging.h / .cpp    spdlog の初期化・shutdown
 │       ├── vector3d.h          3次元ベクトル (演算サンプル、header-only)
 │       ├── attitude.h          姿勢角 (ロール/ピッチ/ヨー、header-only)
-│       ├── ecef_coordinate.h   ECEF 座標 (header-only)
+│       ├── global_coordinate.h ECEF 座標 (グローバル座標系、header-only)
 │       ├── geo_coordinate.h    測地座標 (緯度経度高度、header-only)
 │       ├── map_coordinate.h    地図座標 (header-only)
 │       └── coordinate_conversion.h  座標系変換ユーティリティ (header-only)
@@ -45,7 +45,7 @@ cpp_sample/
         ├── CMakeLists.txt      common 配下モジュールの単体テスト群
         ├── test_vector3d.cpp
         ├── test_attitude.cpp
-        ├── test_ecef_coordinate.cpp
+        ├── test_global_coordinate.cpp
         ├── test_geo_coordinate.cpp
         └── test_coordinate_conversion.cpp
 ```
@@ -162,10 +162,10 @@ cmake --build build-cov --target coverage
   演算処理のサンプル (header-only)。四則演算と内積を持つ 3 次元ベクトル型。
   不変条件を持たないため `struct` で定義している例。
 - [src/common/attitude.h](src/common/attitude.h) — 姿勢角 (ロール/ピッチ/ヨー) を表す header-only モジュール。
-- [src/common/ecef_coordinate.h](src/common/ecef_coordinate.h) /
+- [src/common/global_coordinate.h](src/common/global_coordinate.h) /
   [src/common/geo_coordinate.h](src/common/geo_coordinate.h) /
   [src/common/map_coordinate.h](src/common/map_coordinate.h) —
-  ECEF / 測地 / 地図の各座標型 (header-only)。
+  ECEF (グローバル座標系) / 測地 / 地図の各座標型 (header-only)。
 - [src/common/coordinate_conversion.h](src/common/coordinate_conversion.h) —
   上記座標系間の変換ユーティリティ (header-only)。
 
@@ -176,7 +176,7 @@ cmake --build build-cov --target coverage
 - [tests/common/test_vector3d.cpp](tests/common/test_vector3d.cpp) — Catch2 の
   `SECTION` を使った分岐構造のサンプル。
 - [tests/common/test_attitude.cpp](tests/common/test_attitude.cpp) — 姿勢角モジュールの単体テスト。
-- [tests/common/test_ecef_coordinate.cpp](tests/common/test_ecef_coordinate.cpp) /
+- [tests/common/test_global_coordinate.cpp](tests/common/test_global_coordinate.cpp) /
   [tests/common/test_geo_coordinate.cpp](tests/common/test_geo_coordinate.cpp) —
   各座標型の単体テスト。
 - [tests/common/test_coordinate_conversion.cpp](tests/common/test_coordinate_conversion.cpp) —
