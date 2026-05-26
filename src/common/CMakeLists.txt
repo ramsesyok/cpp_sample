@@ -34,6 +34,11 @@ add_library(myapp_common
 target_include_directories(myapp_common
     PUBLIC
         ${CMAKE_SOURCE_DIR}/src
+)
+# spdlog / nlohmann/json などの 3rdparty ヘッダは SYSTEM include に格上げし、
+# warning_flags の警告 (-Wuseless-cast 等) が外部ライブラリから出ないようにする。
+target_include_directories(myapp_common SYSTEM
+    PUBLIC
         ${CMAKE_SOURCE_DIR}/3rdparty/include
 )
 
@@ -44,6 +49,7 @@ target_link_libraries(myapp_common
         Threads::Threads
     PRIVATE
         coverage_flags
+        warning_flags
 )
 
 # --- spdlog のコンパイル時設定 --------------------------------------

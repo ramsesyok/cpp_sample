@@ -31,6 +31,65 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # ※ ルート側で 1 回だけ呼ぶのが鉄則。
 enable_testing()
 
+# --- 警告フラグ (静的解析の前段) ------------------------------------
+# clang-tidy / Coverity (--all --all-security) と組み合わせて使う前提で、
+# コンパイラ自身にも強めの警告を出させる。
+# 使い方: 自プロジェクトのターゲットに target_link_libraries(... PRIVATE warning_flags)
+# 3rdparty (catch2_main など) には付けないこと。
+add_library(warning_flags INTERFACE)
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
+    target_compile_options(warning_flags INTERFACE
+        -Wall
+        -Wextra
+        -Wpedantic
+        -Wconversion
+        -Wsign-conversion
+        -Wshadow
+        -Wnon-virtual-dtor
+        -Wold-style-cast
+        -Woverloaded-virtual
+        -Wcast-align
+        -Wunused
+        -Wnull-dereference
+        -Wdouble-promotion
+        -Wformat=2
+        -Wimplicit-fallthrough
+    )
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_compile_options(warning_flags INTERFACE
+            -Wmisleading-indentation
+            -Wduplicated-cond
+            -Wduplicated-branches
+            -Wlogical-op
+            -Wuseless-cast
+        )
+    endif()
+elseif(MSVC)
+    # MSVC でも同等の厳しさを狙う。/permissive- は標準準拠の解釈を強制。
+    target_compile_options(warning_flags INTERFACE
+        /W4
+        /permissive-
+        /w14242  # 'identifier': conversion from 'type1' to 'type2', possible loss of data
+        /w14254  # 'operator': conversion from 'type1:field_bits' to 'type2:field_bits'
+        /w14263  # 'function': member function does not override any base class virtual member function
+        /w14265  # 'classname': class has virtual functions, but destructor is not virtual
+        /w14287  # 'operator': unsigned/negative constant mismatch
+        /w14296  # 'operator': expression is always 'boolean_value'
+        /w14311  # 'variable': pointer truncation from 'type1' to 'type2'
+        /w14545  # expression before comma evaluates to a function which is missing an argument list
+        /w14546  # function call before comma missing argument list
+        /w14547  # 'operator': operator before comma has no effect; expected operator with side-effect
+        /w14549  # 'operator': operator before comma has no effect; did you intend 'operator'?
+        /w14555  # expression has no effect; expected expression with side-effect
+        /w14619  # pragma warning: there is no warning number 'number'
+        /w14640  # Enable warning on thread un-safe static member initialization
+        /w14826  # Conversion from 'type1' to 'type2' is sign-extended
+        /w14905  # wide string literal cast to 'LPSTR'
+        /w14906  # string literal cast to 'LPWSTR'
+        /w14928  # illegal copy-initialization; more than one user-defined conversion has been implicitly applied
+    )
+endif()
+
 # --- gcov カバレッジ計装 (GCC/Clang, Linux 専用) --------------------
 # 使い方:
 #   cmake -S . -B build -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug

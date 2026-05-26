@@ -1,0 +1,196 @@
+Checks: >
+  -*,
+  bugprone-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  modernize-*,
+  cppcoreguidelines-*,
+  clang-analyzer-*,
+  google-*,
+  -readability-magic-numbers,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-pro-type-vararg,
+  -cppcoreguidelines-avoid-do-while,
+  -modernize-use-trailing-return-type,
+  -modernize-use-auto,
+  -modernize-avoid-c-arrays,
+  -readability-identifier-length
+
+WarningsAsErrors: >
+  bugprone-*,
+  performance-*,
+  portability-*,
+  clang-analyzer-*,
+  google-*,
+  readability-identifier-naming,
+  modernize-use-nullptr,
+  modernize-use-override,
+  modernize-use-emplace,
+  cppcoreguidelines-owning-memory,
+  cppcoreguidelines-pro-type-*,
+  cppcoreguidelines-pro-bounds-*,
+  cppcoreguidelines-pro-type-member-init,
+  cppcoreguidelines-pro-type-const-cast,
+  cppcoreguidelines-pro-type-reinterpret-cast,
+  cppcoreguidelines-pro-type-static-cast-downcast
+
+HeaderFilterRegex: "^(?!.*(third_party|external|vendor|generated|build|out|cmake-build)).*$"
+FormatStyle: file
+
+CheckOptions:
+  # ------------------------------------------------------------
+  # readability-identifier-naming
+  # Google C++ Style Guide 風の命名規則
+  # ------------------------------------------------------------
+
+  # namespace: lower_case
+  - key: readability-identifier-naming.NamespaceCase
+    value: lower_case
+
+  # 型名: CamelCase
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.StructCase
+    value: CamelCase
+  - key: readability-identifier-naming.UnionCase
+    value: CamelCase
+  - key: readability-identifier-naming.EnumCase
+    value: CamelCase
+  - key: readability-identifier-naming.TypeAliasCase
+    value: CamelCase
+  - key: readability-identifier-naming.TypedefCase
+    value: CamelCase
+
+  # C++20 conceptを使う場合
+  - key: readability-identifier-naming.ConceptCase
+    value: CamelCase
+
+  # 関数・メソッド: CamelCase
+  - key: readability-identifier-naming.FunctionCase
+    value: CamelCase
+  - key: readability-identifier-naming.MethodCase
+    value: CamelCase
+
+  # 通常変数: lower_case
+  - key: readability-identifier-naming.VariableCase
+    value: lower_case
+  - key: readability-identifier-naming.LocalVariableCase
+    value: lower_case
+  - key: readability-identifier-naming.ParameterCase
+    value: lower_case
+
+  # グローバル変数: lower_case
+  # Google C++ Style Guideではグローバル変数は強く避けるべき対象。
+  # やむを得ず使う場合は lower_case とし、g_ 接頭辞は採用しない。
+  - key: readability-identifier-naming.GlobalVariableCase
+    value: lower_case
+
+  # メンバ変数: lower_case + 末尾 _
+  - key: readability-identifier-naming.MemberCase
+    value: lower_case
+  - key: readability-identifier-naming.MemberSuffix
+    value: _
+  - key: readability-identifier-naming.PrivateMemberCase
+    value: lower_case
+  - key: readability-identifier-naming.PrivateMemberSuffix
+    value: _
+  - key: readability-identifier-naming.ProtectedMemberCase
+    value: lower_case
+  - key: readability-identifier-naming.ProtectedMemberSuffix
+    value: _
+  - key: readability-identifier-naming.PublicMemberCase
+    value: lower_case
+  - key: readability-identifier-naming.PublicMemberSuffix
+    value: _
+
+  # static変数
+  - key: readability-identifier-naming.StaticVariableCase
+    value: lower_case
+  - key: readability-identifier-naming.StaticConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.StaticConstantPrefix
+    value: k
+
+  # const / constexpr 定数: kCamelCase
+  - key: readability-identifier-naming.ConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.ConstantPrefix
+    value: k
+  - key: readability-identifier-naming.GlobalConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.GlobalConstantPrefix
+    value: k
+  - key: readability-identifier-naming.LocalConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.LocalConstantPrefix
+    value: k
+  - key: readability-identifier-naming.ConstexprVariableCase
+    value: CamelCase
+  - key: readability-identifier-naming.ConstexprVariablePrefix
+    value: k
+  - key: readability-identifier-naming.ClassConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.ClassConstantPrefix
+    value: k
+
+  # enum定数: kCamelCase
+  - key: readability-identifier-naming.EnumConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.EnumConstantPrefix
+    value: k
+
+  # template parameter
+  - key: readability-identifier-naming.TemplateParameterCase
+    value: CamelCase
+  - key: readability-identifier-naming.TypeTemplateParameterCase
+    value: CamelCase
+  - key: readability-identifier-naming.ValueTemplateParameterCase
+    value: lower_case
+  - key: readability-identifier-naming.TemplateTemplateParameterCase
+    value: CamelCase
+
+  # macro: UPPER_CASE
+  - key: readability-identifier-naming.MacroDefinitionCase
+    value: UPPER_CASE
+
+  # ------------------------------------------------------------
+  # readability / complexity
+  # ------------------------------------------------------------
+  - key: readability-function-size.LineThreshold
+    value: "120"
+  - key: readability-function-size.StatementThreshold
+    value: "80"
+  - key: readability-function-size.BranchThreshold
+    value: "12"
+  - key: readability-function-cognitive-complexity.Threshold
+    value: "25"
+
+  # ------------------------------------------------------------
+  # modernize
+  # ------------------------------------------------------------
+  - key: modernize-use-nullptr.NullMacros
+    value: "NULL"
+
+  # ------------------------------------------------------------
+  # bugprone
+  # ------------------------------------------------------------
+  - key: bugprone-argument-comment.StrictMode
+    value: "true"
+
+# 数値計算・座標処理・シミュレーション系では、しきい値、係数、次元数、定数値が多く、ノイズが出やすいためです。必要なら後で有効にしてください。
+# readability-magic-numbers
+# cppcoreguidelines-avoid-magic-numbers
+
+# Google C++ Style Guide寄りでは、型が明確な方が読みやすい場面も多いため、auto 強制は外しています。
+# modernize-use-auto
+
+# 通常の業務C++では好みが分かれ、Google風の一般的な書き方とも必ずしも合いません。
+# modernize-use-trailing-return-type
+
+# C/C++混在、既存C API、数値計算、組込み系では現実的に使う場面があるため、最初は除外しています。完全にモダンC++だけで書く方針なら有効化してもよいです。
+# modernize-avoid-c-arrays
+# cppcoreguidelines-pro-bounds-array-to-pointer-decay
+# cppcoreguidelines-pro-bounds-pointer-arithmetic

@@ -1,0 +1,39 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "clang-tidy: current file",
+            "type": "shell",
+            "command": "clang-tidy",
+            "args": [
+                "-p",
+                "${workspaceFolder}/build",
+                "${file}"
+            ],
+            "group": "test",
+            "problemMatcher": "$gcc",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "clang-format: check current file",
+            "type": "shell",
+            "command": "clang-format",
+            "args": [
+                "--dry-run",
+                "--Werror",
+                "${file}"
+            ],
+            "group": "test",
+            "problemMatcher": "$gcc",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        }
+    ]
+}
