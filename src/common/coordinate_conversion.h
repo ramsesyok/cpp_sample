@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-#include "common/ecef_position.h"
+#include "common/ecef_coordinate.h"
 #include "common/geo_coordinate.h"
 #include "common/map_coordinate.h"
 
@@ -25,8 +25,7 @@ inline constexpr double kSemiMajorAxisM = 6378137.0;
 /** @brief WGS84 楕円体の扁平率 f = 1/298.257223563。 */
 inline constexpr double kFlattening = 1.0 / 298.257223563;
 /** @brief 第一離心率の二乗 e² = 2f - f²。 */
-inline constexpr double kFirstEccentricitySq =
-    kFlattening * (2.0 - kFlattening);
+inline constexpr double kFirstEccentricitySq = kFlattening * (2.0 - kFlattening);
 
 }  // namespace wgs84
 
@@ -77,23 +76,21 @@ inline GeoCoordinate ToGeo(const MapCoordinate& m) {
  * @param g  ラジアン基準のジオデティック座標。
  * @return WGS84 楕円体上の ECEF 位置 [m]。
  */
-inline EcefPosition GeoToEcef(const GeoCoordinate& g) {
+inline EcefCoordinate GeoToEcef(const GeoCoordinate& g) {
   const double sin_lat = std::sin(g.latitude());
   const double cos_lat = std::cos(g.latitude());
   const double sin_lon = std::sin(g.longitude());
   const double cos_lon = std::cos(g.longitude());
 
   const double n =
-      wgs84::kSemiMajorAxisM /
-      std::sqrt(1.0 - wgs84::kFirstEccentricitySq * sin_lat * sin_lat);
+      wgs84::kSemiMajorAxisM / std::sqrt(1.0 - wgs84::kFirstEccentricitySq * sin_lat * sin_lat);
   const double n_plus_h = n + g.altitude();
 
   const double x = n_plus_h * cos_lat * cos_lon;
   const double y = n_plus_h * cos_lat * sin_lon;
-  const double z =
-      (n * (1.0 - wgs84::kFirstEccentricitySq) + g.altitude()) * sin_lat;
+  const double z = (n * (1.0 - wgs84::kFirstEccentricitySq) + g.altitude()) * sin_lat;
 
-  return EcefPosition{x, y, z};
+  return EcefCoordinate{x, y, z};
 }
 
 /**
@@ -110,12 +107,12 @@ inline EcefPosition GeoToEcef(const GeoCoordinate& g) {
  * @param p_ecef  ECEF 位置 [m]。
  * @return WGS84 楕円体上のジオデティック座標 (ラジアン基準)。
  */
-inline GeoCoordinate EcefToGeo(const EcefPosition& p_ecef) {
+inline GeoCoordinate EcefToGeo(const EcefCoordinate& p_ecef) {
   constexpr double a = wgs84::kSemiMajorAxisM;
   constexpr double f = wgs84::kFlattening;
   constexpr double e2 = wgs84::kFirstEccentricitySq;
-  constexpr double b = a * (1.0 - f);       // 短半径
-  constexpr double ep2 = e2 / (1.0 - e2);   // 第二離心率の二乗 e'²
+  constexpr double b = a * (1.0 - f);      // 短半径
+  constexpr double ep2 = e2 / (1.0 - e2);  // 第二離心率の二乗 e'²
   constexpr double kHalfPi = 1.5707963267948966;
 
   const double x = p_ecef.x();
@@ -139,9 +136,8 @@ inline GeoCoordinate EcefToGeo(const EcefPosition& p_ecef) {
   const double cos_beta = std::cos(beta);
 
   // Bowring の閉形式による緯度 φ。
-  const double lat =
-      std::atan2(z + ep2 * b * sin_beta * sin_beta * sin_beta,
-                 p - e2 * a * cos_beta * cos_beta * cos_beta);
+  const double lat = std::atan2(z + ep2 * b * sin_beta * sin_beta * sin_beta,
+                                p - e2 * a * cos_beta * cos_beta * cos_beta);
 
   const double sin_lat = std::sin(lat);
   const double cos_lat = std::cos(lat);
