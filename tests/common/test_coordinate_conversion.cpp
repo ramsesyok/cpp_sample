@@ -1,4 +1,6 @@
 #include <catch2/catch_amalgamated.hpp>
+
+#include <array>
 #include <cmath>
 
 #include "common/coordinate_conversion.h"
@@ -123,14 +125,14 @@ TEST_CASE("ecef <-> geo ラウンドトリップ (各種地点)", "[coord_conv][
     double lon_deg_;
     double alt_m_;
   };
-  const Case kCases[] = {
+  const std::array<Case, 6> kCases = {{
       {35.6812, 139.7671, 40.0},   // 東京
       {-33.8688, 151.2093, 58.0},  // シドニー
       {64.1466, -21.9426, 0.0},    // レイキャビク
       {-1.2921, 36.8219, 1795.0},  // ナイロビ (標高あり)
       {45.0, 0.0, 10000.0},        // 北緯45° 高高度
       {0.0, 180.0, 0.0},           // 日付変更線
-  };
+  }};
 
   for (const auto& c : kCases) {
     const GeoCoordinate kOriginal = ToGeo(MapCoordinate{c.lat_deg_, c.lon_deg_, c.alt_m_});

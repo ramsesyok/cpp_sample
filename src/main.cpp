@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <exception>
 #include <iostream>
 #include <string>
@@ -35,8 +36,10 @@ int main(int argc, char* argv[]) {
     // SPDLOG_CRITICAL 自体が投げる可能性があるので内側でも捕捉する。
     try {
       SPDLOG_CRITICAL("unhandled exception: {}", e.what());
-    } catch (...) {  // NOLINT(bugprone-empty-catch)
-      // ロガーが死んでいたら諦める。main から例外を出さないことを優先する。
+    } catch (...) {
+      // ロガーが死んでいたら stderr に直接出す。
+      // std::fputs は noexcept なので main から例外を漏らさない。
+      std::fputs("unhandled exception (logger failed)\n", stderr);
     }
     return 1;
   } catch (...) {
