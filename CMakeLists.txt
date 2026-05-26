@@ -113,17 +113,50 @@ if(ENABLE_COVERAGE)
     target_link_options(coverage_flags INTERFACE --coverage)
 
     # gcovr が見つかれば HTML レポートを生成する `coverage` ターゲットを追加。
+    # gcovr 本体は PATH 上の実行ファイルとして探す。
+    # 見つからなければ `python -m gcovr` でのフォールバックを試みる
+    # (pip install したものが Scripts/ を PATH に通していない環境向け)。
     find_program(GCOVR_EXECUTABLE gcovr)
-    if(GCOVR_EXECUTABLE)
+    if(NOT GCOVR_EXECUTABLE)
+        find_package(Python3 COMPONENTS Interpreter QUIET)
+        if(Python3_Interpreter_FOUND)
+            execute_process(
+                COMMAND ${Python3_EXECUTABLE} -m gcovr --version
+                RESULT_VARIABLE _gcovr_module_check
+                OUTPUT_QUIET ERROR_QUIET
+            )
+            if(_gcovr_module_check EQUAL 0)
+                set(GCOVR_COMMAND ${Python3_EXECUTABLE} -m gcovr)
+            endif()
+        endif()
+    else()
+        set(GCOVR_COMMAND ${GCOVR_EXECUTABLE})
+    endif()
+
+    if(GCOVR_COMMAND)
+        # OS により gcov 実装を切り替える。
+        #   Windows: llvm-mingw/Clang ベース想定 → `llvm-cov gcov` を使う
+        #   Linux:   GCC ベース想定 → 標準の `gcov` を使う
+        # gcovr の --gcov-executable は文字列 1 つを受けるので、
+        # 引数付き ("llvm-cov gcov") のときはそのまま 1 トークンで渡す。
+        if(WIN32)
+            set(GCOV_EXECUTABLE_FOR_GCOVR "llvm-cov gcov")
+        else()
+            set(GCOV_EXECUTABLE_FOR_GCOVR "gcov")
+        endif()
+
         add_custom_target(coverage
-            COMMAND ${GCOVR_EXECUTABLE}
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/coverage
+            COMMAND ${GCOVR_COMMAND}
                 --root ${CMAKE_SOURCE_DIR}/src
                 --exclude ${CMAKE_SOURCE_DIR}/3rdparty
                 --exclude ${CMAKE_SOURCE_DIR}/tests/catch2
+                --gcov-executable ${GCOV_EXECUTABLE_FOR_GCOVR}
                 --html-details ${CMAKE_BINARY_DIR}/coverage/index.html
                 --print-summary
-            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-            COMMENT "カバレッジレポートを生成中 → ${CMAKE_BINARY_DIR}/coverage/index.html"
+                ${CMAKE_BINARY_DIR}
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            COMMENT "カバレッジレポートを生成中 (gcov=${GCOV_EXECUTABLE_FOR_GCOVR}) → ${CMAKE_BINARY_DIR}/coverage/index.html"
         )
     else()
         message(STATUS

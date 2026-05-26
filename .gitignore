@@ -13,3 +13,4 @@
 3rdparty/lib/*.so
 build/
 .claude
+build-cov
