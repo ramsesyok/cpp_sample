@@ -1,6 +1,7 @@
 #ifndef MYAPP_COMMON_MATRIX_3X3_H
 #define MYAPP_COMMON_MATRIX_3X3_H
 
+#include <array>
 #include <cmath>
 
 #include "common/attitude.h"
@@ -19,27 +20,27 @@ namespace myapp::common {
  * FromAttitude() などの生成関数を用いる。
  */
 struct Matrix3x3 {
-  double m_[3][3];
+  std::array<std::array<double, 3>, 3> m_;
 
-  /** @brief (row, col) 要素への参照。0 ≦ row, col ≦ 2。 */
+  /** @brief (row, col) 要素への参照。0 ≦ row, col ≦ 2。範囲外は std::out_of_range。 */
   constexpr double& At(int row, int col) {
-    return m_[row][col];
+    return m_.at(static_cast<std::size_t>(row)).at(static_cast<std::size_t>(col));
   }
-  /** @brief (row, col) 要素の値。0 ≦ row, col ≦ 2。 */
+  /** @brief (row, col) 要素の値。0 ≦ row, col ≦ 2。範囲外は std::out_of_range。 */
   [[nodiscard]] constexpr double At(int row, int col) const {
-    return m_[row][col];
+    return m_.at(static_cast<std::size_t>(row)).at(static_cast<std::size_t>(col));
   }
 
   /** @brief 単位行列。 */
   static constexpr Matrix3x3 Identity() {
-    return Matrix3x3{{{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}}};
+    return Matrix3x3{{{{{1.0, 0.0, 0.0}}, {{0.0, 1.0, 0.0}}, {{0.0, 0.0, 1.0}}}}};
   }
 
   /** @brief 転置行列 (this^T) を返す。 */
   [[nodiscard]] constexpr Matrix3x3 Transpose() const {
-    return Matrix3x3{{{m_[0][0], m_[1][0], m_[2][0]},
-                      {m_[0][1], m_[1][1], m_[2][1]},
-                      {m_[0][2], m_[1][2], m_[2][2]}}};
+    return Matrix3x3{{{{{m_[0][0], m_[1][0], m_[2][0]}},
+                       {{m_[0][1], m_[1][1], m_[2][1]}},
+                       {{m_[0][2], m_[1][2], m_[2][2]}}}}};
   }
 
   /**
@@ -48,14 +49,20 @@ struct Matrix3x3 {
    * @return 積行列。
    */
   [[nodiscard]] constexpr Matrix3x3 operator*(const Matrix3x3& rhs) const {
-    Matrix3x3 r{};
-    for (int i = 0; i < 3; ++i) {
-      for (int j = 0; j < 3; ++j) {
-        r.m_[i][j] = (m_[i][0] * rhs.m_[0][j]) + (m_[i][1] * rhs.m_[1][j]) +
-                     (m_[i][2] * rhs.m_[2][j]);
-      }
-    }
-    return r;
+    // 添字は定数式に展開し、cppcoreguidelines-pro-bounds-constant-array-index を満たす。
+    const auto& a = m_;
+    const auto& b = rhs.m_;
+    return Matrix3x3{{{
+        {{(a[0][0] * b[0][0]) + (a[0][1] * b[1][0]) + (a[0][2] * b[2][0]),
+          (a[0][0] * b[0][1]) + (a[0][1] * b[1][1]) + (a[0][2] * b[2][1]),
+          (a[0][0] * b[0][2]) + (a[0][1] * b[1][2]) + (a[0][2] * b[2][2])}},
+        {{(a[1][0] * b[0][0]) + (a[1][1] * b[1][0]) + (a[1][2] * b[2][0]),
+          (a[1][0] * b[0][1]) + (a[1][1] * b[1][1]) + (a[1][2] * b[2][1]),
+          (a[1][0] * b[0][2]) + (a[1][1] * b[1][2]) + (a[1][2] * b[2][2])}},
+        {{(a[2][0] * b[0][0]) + (a[2][1] * b[1][0]) + (a[2][2] * b[2][0]),
+          (a[2][0] * b[0][1]) + (a[2][1] * b[1][1]) + (a[2][2] * b[2][1]),
+          (a[2][0] * b[0][2]) + (a[2][1] * b[1][2]) + (a[2][2] * b[2][2])}},
+    }}};
   }
 
   /**
@@ -92,11 +99,11 @@ inline Matrix3x3 FromAttitude(const Attitude& a) {
   const double kCs = std::cos(a.psi_);
   const double kSs = std::sin(a.psi_);
 
-  return Matrix3x3{{
-      {kCs * kCt, (kCs * kSt * kSp) - (kSs * kCp), (kCs * kSt * kCp) + (kSs * kSp)},
-      {kSs * kCt, (kSs * kSt * kSp) + (kCs * kCp), (kSs * kSt * kCp) - (kCs * kSp)},
-      {-kSt, kCt * kSp, kCt * kCp},
-  }};
+  return Matrix3x3{{{
+      {{kCs * kCt, (kCs * kSt * kSp) - (kSs * kCp), (kCs * kSt * kCp) + (kSs * kSp)}},
+      {{kSs * kCt, (kSs * kSt * kSp) + (kCs * kCp), (kSs * kSt * kCp) - (kCs * kSp)}},
+      {{-kSt, kCt * kSp, kCt * kCp}},
+  }}};
 }
 
 }  // namespace myapp::common

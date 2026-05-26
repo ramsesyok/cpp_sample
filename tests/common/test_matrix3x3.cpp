@@ -35,7 +35,7 @@ TEST_CASE("Matrix3x3: Identity * v == v", "[matrix3x3]") {
 }
 
 TEST_CASE("Matrix3x3: Transpose", "[matrix3x3]") {
-  const Matrix3x3 kM{{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, {7.0, 8.0, 9.0}}};
+  const Matrix3x3 kM{{{{{1.0, 2.0, 3.0}}, {{4.0, 5.0, 6.0}}, {{7.0, 8.0, 9.0}}}}};
   const Matrix3x3 kT = kM.Transpose();
   for (int i = 0; i < 3; ++i) {
     for (int j = 0; j < 3; ++j) {
@@ -45,7 +45,7 @@ TEST_CASE("Matrix3x3: Transpose", "[matrix3x3]") {
 }
 
 TEST_CASE("Matrix3x3: 行列同士の積", "[matrix3x3]") {
-  const Matrix3x3 kA{{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, {7.0, 8.0, 9.0}}};
+  const Matrix3x3 kA{{{{{1.0, 2.0, 3.0}}, {{4.0, 5.0, 6.0}}, {{7.0, 8.0, 9.0}}}}};
   const Matrix3x3 kI = Matrix3x3::Identity();
   const Matrix3x3 kR = kA * kI;
   for (int i = 0; i < 3; ++i) {
@@ -57,7 +57,7 @@ TEST_CASE("Matrix3x3: 行列同士の積", "[matrix3x3]") {
 
 TEST_CASE("Matrix3x3: 行列ベクトル積", "[matrix3x3]") {
   // 単純な対角行列で各成分のスケーリングを確認。
-  const Matrix3x3 kS{{{2.0, 0.0, 0.0}, {0.0, 3.0, 0.0}, {0.0, 0.0, 4.0}}};
+  const Matrix3x3 kS{{{{{2.0, 0.0, 0.0}}, {{0.0, 3.0, 0.0}}, {{0.0, 0.0, 4.0}}}}};
   const Vector3D kV{1.0, 1.0, 1.0};
   const Vector3D kR = kS * kV;
   REQUIRE(kR.x_ == Catch::Approx(2.0));
