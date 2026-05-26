@@ -21,9 +21,12 @@ add_library(myapp_common
     logging.h
     vector3d.h
     attitude.h
-    ecef_coordinate.h
+    matrix3x3.h
+    global_coordinate.h
     geo_coordinate.h
     map_coordinate.h
+    local_coordinate.h
+    body_coordinate.h
     coordinate_conversion.h
 )
 

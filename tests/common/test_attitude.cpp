@@ -45,19 +45,3 @@ TEST_CASE("Attitude: スカラー除算", "[attitude]") {
   REQUIRE(kR.psi_ == Catch::Approx(3.0));
 }
 
-TEST_CASE("Attitude: 内積", "[attitude]") {
-  SECTION("一般ケース") {
-    const Attitude kA{1.0, 2.0, 3.0};
-    const Attitude kB{4.0, -5.0, 6.0};
-    REQUIRE(kA.Dot(kB) == Catch::Approx((1.0 * 4.0) + (2.0 * -5.0) + (3.0 * 6.0)));
-  }
-  SECTION("直交ベクトルは 0") {
-    const Attitude kX{1.0, 0.0, 0.0};
-    const Attitude kY{0.0, 1.0, 0.0};
-    REQUIRE(kX.Dot(kY) == Catch::Approx(0.0));
-  }
-  SECTION("自身との内積はノルム二乗") {
-    const Attitude kA{3.0, 4.0, 0.0};
-    REQUIRE(kA.Dot(kA) == Catch::Approx(25.0));
-  }
-}

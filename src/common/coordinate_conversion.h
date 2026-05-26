@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-#include "common/ecef_coordinate.h"
+#include "common/global_coordinate.h"
 #include "common/geo_coordinate.h"
 #include "common/map_coordinate.h"
 
@@ -14,7 +14,7 @@ namespace myapp::common {
 // 明示する。
 //
 // 楕円体は WGS84 を使用する。
-// EcefToGeo は閉形式 (Bowring 1976) を採用。地表近傍 (~航空機高度) で
+// GlobalToGeo は閉形式 (Bowring 1976) を採用。地表近傍 (~航空機高度) で
 // 数値誤差レベルの精度が反復なしで得られる。極や軌道高度を多用する場合
 // は Heikkinen の閉形式に差し替えるとよい。
 
@@ -76,7 +76,7 @@ inline GeoCoordinate ToGeo(const MapCoordinate& m) {
  * @param g  ラジアン基準のジオデティック座標。
  * @return WGS84 楕円体上の ECEF 位置 [m]。
  */
-inline EcefCoordinate GeoToEcef(const GeoCoordinate& g) {
+inline GlobalCoordinate GeoToGlobal(const GeoCoordinate& g) {
   const double kSinLat = std::sin(g.Latitude());
   const double kCosLat = std::cos(g.Latitude());
   const double kSinLon = std::sin(g.Longitude());
@@ -90,7 +90,7 @@ inline EcefCoordinate GeoToEcef(const GeoCoordinate& g) {
   const double kY = kNPlusH * kCosLat * kSinLon;
   const double kZ = ((kN * (1.0 - wgs84::kFirstEccentricitySq)) + g.Altitude()) * kSinLat;
 
-  return EcefCoordinate{kX, kY, kZ};
+  return GlobalCoordinate{kX, kY, kZ};
 }
 
 /**
@@ -107,7 +107,7 @@ inline EcefCoordinate GeoToEcef(const GeoCoordinate& g) {
  * @param p_ecef  ECEF 位置 [m]。
  * @return WGS84 楕円体上のジオデティック座標 (ラジアン基準)。
  */
-inline GeoCoordinate EcefToGeo(const EcefCoordinate& p_ecef) {
+inline GeoCoordinate GlobalToGeo(const GlobalCoordinate& p_ecef) {
   constexpr double kA = wgs84::kSemiMajorAxisM;
   constexpr double kF = wgs84::kFlattening;
   constexpr double kE2 = wgs84::kFirstEccentricitySq;
