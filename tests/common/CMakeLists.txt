@@ -16,6 +16,11 @@ target_link_libraries(test_vector3d PRIVATE myapp_common catch2_main coverage_fl
 # CTest に登録。これで `ctest` 実行時に test_vector3d も流れる。
 add_test(NAME test_vector3d COMMAND test_vector3d)
 
+# attitude (姿勢角) のテスト実行ファイル。Vector3D と同様にヘッダオンリー。
+add_executable(test_attitude test_attitude.cpp)
+target_link_libraries(test_attitude PRIVATE myapp_common catch2_main coverage_flags)
+add_test(NAME test_attitude COMMAND test_attitude)
+
 # 座標系まわり (EcefCoordinate / GeoCoordinate / MapCoordinate / 変換)。
 # いずれもヘッダオンリーだが、include パスと Catch2 を引き込むため
 # myapp_common と catch2_main にリンクしておく。

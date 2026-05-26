@@ -20,6 +20,7 @@ add_library(myapp_common
     logging.cpp
     logging.h
     vector3d.h
+    attitude.h
     ecef_coordinate.h
     geo_coordinate.h
     map_coordinate.h
