@@ -7,6 +7,7 @@
 #include "common/vector3d.h"
 
 using myapp::common::Attitude;
+using myapp::common::Dot;
 using myapp::common::FromAttitude;
 using myapp::common::Matrix3x3;
 using myapp::common::Vector3D;
@@ -66,6 +67,11 @@ TEST_CASE("Matrix3x3: 行列ベクトル積", "[matrix3x3]") {
   REQUIRE(kR.x_ == Catch::Approx(2.0));
   REQUIRE(kR.y_ == Catch::Approx(3.0));
   REQUIRE(kR.z_ == Catch::Approx(4.0));
+
+  SECTION("自由関数版 Dot(m, v) は m * v と等価") {
+    const Vector3D kRd = Dot(kS, kV);
+    REQUIRE(kRd == kR);
+  }
 }
 
 TEST_CASE("FromAttitude: ゼロ姿勢は単位行列", "[matrix3x3]") {

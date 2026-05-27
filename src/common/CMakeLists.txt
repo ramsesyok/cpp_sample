@@ -20,6 +20,7 @@ add_library(myapp_common
     logging.cpp
     logging.h
     constants.h
+    vector2d.h
     vector3d.h
     attitude.h
     matrix3x3.h

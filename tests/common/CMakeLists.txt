@@ -8,6 +8,7 @@
 #   myapp_common にのみリンクすればよい。
 # =====================================================================
 
+myapp_add_test(test_vector2d              test_vector2d.cpp              PRIVATE_LIBS myapp_common)
 myapp_add_test(test_vector3d              test_vector3d.cpp              PRIVATE_LIBS myapp_common)
 myapp_add_test(test_attitude              test_attitude.cpp              PRIVATE_LIBS myapp_common)
 myapp_add_test(test_global_coordinate     test_global_coordinate.cpp     PRIVATE_LIBS myapp_common)
