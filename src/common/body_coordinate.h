@@ -54,8 +54,8 @@ class BodyCoordinate {
    * @return 加算後の機体位置。
    */
   BodyCoordinate operator+(const Vector3D& displacement) const {
-    return BodyCoordinate{v_.x_ + displacement.x_, v_.y_ + displacement.y_,
-                          v_.z_ + displacement.z_};
+    const Vector3D kR = v_ + displacement;
+    return BodyCoordinate{kR.x_, kR.y_, kR.z_};
   }
 
   /**
@@ -64,8 +64,8 @@ class BodyCoordinate {
    * @return 減算後の機体位置。
    */
   BodyCoordinate operator-(const Vector3D& displacement) const {
-    return BodyCoordinate{v_.x_ - displacement.x_, v_.y_ - displacement.y_,
-                          v_.z_ - displacement.z_};
+    const Vector3D kR = v_ - displacement;
+    return BodyCoordinate{kR.x_, kR.y_, kR.z_};
   }
 
  private:

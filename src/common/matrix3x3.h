@@ -1,7 +1,6 @@
 #ifndef MYAPP_COMMON_MATRIX_3X3_H
 #define MYAPP_COMMON_MATRIX_3X3_H
 
-#include <array>
 #include <cmath>
 
 #include "common/attitude.h"
@@ -12,35 +11,32 @@ namespace myapp::common {
 /**
  * @brief 3x3 行列。回転行列および一般の線形変換を表現する。
  *
- * 要素は行優先 (row-major) で m_[row][col] に保持する。
+ * 要素は行優先 (row-major) で mIJ_ (I=行, J=列, 1-origin) に保持する。
  * 行列ベクトル積 M * v はベクトルを列ベクトルとみなして
- * (M * v)_i = Σ_j m_[i][j] * v_j を計算する。
+ * (M * v)_i = Σ_j m_ij * v_j を計算する。
  *
  * 不変条件 (直交性など) は型では保証しない。回転行列として扱う場合は
  * FromAttitude() などの生成関数を用いる。
  */
 struct Matrix3x3 {
-  std::array<std::array<double, 3>, 3> m_;
-
-  /** @brief (row, col) 要素への参照。0 ≦ row, col ≦ 2。範囲外は std::out_of_range。 */
-  constexpr double& At(int row, int col) {
-    return m_.at(static_cast<std::size_t>(row)).at(static_cast<std::size_t>(col));
-  }
-  /** @brief (row, col) 要素の値。0 ≦ row, col ≦ 2。範囲外は std::out_of_range。 */
-  [[nodiscard]] constexpr double At(int row, int col) const {
-    return m_.at(static_cast<std::size_t>(row)).at(static_cast<std::size_t>(col));
-  }
+  double m11_;
+  double m12_;
+  double m13_;
+  double m21_;
+  double m22_;
+  double m23_;
+  double m31_;
+  double m32_;
+  double m33_;
 
   /** @brief 単位行列。 */
   static constexpr Matrix3x3 Identity() {
-    return Matrix3x3{{{{{1.0, 0.0, 0.0}}, {{0.0, 1.0, 0.0}}, {{0.0, 0.0, 1.0}}}}};
+    return Matrix3x3{1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
   }
 
   /** @brief 転置行列 (this^T) を返す。 */
   [[nodiscard]] constexpr Matrix3x3 Transpose() const {
-    return Matrix3x3{{{{{m_[0][0], m_[1][0], m_[2][0]}},
-                       {{m_[0][1], m_[1][1], m_[2][1]}},
-                       {{m_[0][2], m_[1][2], m_[2][2]}}}}};
+    return Matrix3x3{m11_, m21_, m31_, m12_, m22_, m32_, m13_, m23_, m33_};
   }
 
   /**
@@ -49,20 +45,17 @@ struct Matrix3x3 {
    * @return 積行列。
    */
   [[nodiscard]] constexpr Matrix3x3 operator*(const Matrix3x3& rhs) const {
-    // 添字は定数式に展開し、cppcoreguidelines-pro-bounds-constant-array-index を満たす。
-    const auto& a = m_;
-    const auto& b = rhs.m_;
-    return Matrix3x3{{{
-        {{(a[0][0] * b[0][0]) + (a[0][1] * b[1][0]) + (a[0][2] * b[2][0]),
-          (a[0][0] * b[0][1]) + (a[0][1] * b[1][1]) + (a[0][2] * b[2][1]),
-          (a[0][0] * b[0][2]) + (a[0][1] * b[1][2]) + (a[0][2] * b[2][2])}},
-        {{(a[1][0] * b[0][0]) + (a[1][1] * b[1][0]) + (a[1][2] * b[2][0]),
-          (a[1][0] * b[0][1]) + (a[1][1] * b[1][1]) + (a[1][2] * b[2][1]),
-          (a[1][0] * b[0][2]) + (a[1][1] * b[1][2]) + (a[1][2] * b[2][2])}},
-        {{(a[2][0] * b[0][0]) + (a[2][1] * b[1][0]) + (a[2][2] * b[2][0]),
-          (a[2][0] * b[0][1]) + (a[2][1] * b[1][1]) + (a[2][2] * b[2][1]),
-          (a[2][0] * b[0][2]) + (a[2][1] * b[1][2]) + (a[2][2] * b[2][2])}},
-    }}};
+    return Matrix3x3{
+        (m11_ * rhs.m11_) + (m12_ * rhs.m21_) + (m13_ * rhs.m31_),
+        (m11_ * rhs.m12_) + (m12_ * rhs.m22_) + (m13_ * rhs.m32_),
+        (m11_ * rhs.m13_) + (m12_ * rhs.m23_) + (m13_ * rhs.m33_),
+        (m21_ * rhs.m11_) + (m22_ * rhs.m21_) + (m23_ * rhs.m31_),
+        (m21_ * rhs.m12_) + (m22_ * rhs.m22_) + (m23_ * rhs.m32_),
+        (m21_ * rhs.m13_) + (m22_ * rhs.m23_) + (m23_ * rhs.m33_),
+        (m31_ * rhs.m11_) + (m32_ * rhs.m21_) + (m33_ * rhs.m31_),
+        (m31_ * rhs.m12_) + (m32_ * rhs.m22_) + (m33_ * rhs.m32_),
+        (m31_ * rhs.m13_) + (m32_ * rhs.m23_) + (m33_ * rhs.m33_),
+    };
   }
 
   /**
@@ -72,9 +65,9 @@ struct Matrix3x3 {
    */
   [[nodiscard]] constexpr Vector3D operator*(const Vector3D& v) const {
     return Vector3D{
-        (m_[0][0] * v.x_) + (m_[0][1] * v.y_) + (m_[0][2] * v.z_),
-        (m_[1][0] * v.x_) + (m_[1][1] * v.y_) + (m_[1][2] * v.z_),
-        (m_[2][0] * v.x_) + (m_[2][1] * v.y_) + (m_[2][2] * v.z_),
+        (m11_ * v.x_) + (m12_ * v.y_) + (m13_ * v.z_),
+        (m21_ * v.x_) + (m22_ * v.y_) + (m23_ * v.z_),
+        (m31_ * v.x_) + (m32_ * v.y_) + (m33_ * v.z_),
     };
   }
 };
@@ -99,11 +92,11 @@ inline Matrix3x3 FromAttitude(const Attitude& a) {
   const double kCs = std::cos(a.psi_);
   const double kSs = std::sin(a.psi_);
 
-  return Matrix3x3{{{
-      {{kCs * kCt, (kCs * kSt * kSp) - (kSs * kCp), (kCs * kSt * kCp) + (kSs * kSp)}},
-      {{kSs * kCt, (kSs * kSt * kSp) + (kCs * kCp), (kSs * kSt * kCp) - (kCs * kSp)}},
-      {{-kSt, kCt * kSp, kCt * kCp}},
-  }}};
+  return Matrix3x3{
+      kCs * kCt, (kCs * kSt * kSp) - (kSs * kCp), (kCs * kSt * kCp) + (kSs * kSp),
+      kSs * kCt, (kSs * kSt * kSp) + (kCs * kCp), (kSs * kSt * kCp) - (kCs * kSp),
+      -kSt,      kCt * kSp,                       kCt * kCp,
+  };
 }
 
 }  // namespace myapp::common

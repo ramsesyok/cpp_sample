@@ -47,11 +47,11 @@ mc::Matrix3x3 EcefToNedRotation(double lat_rad, double lon_rad) {
   const double c_lat = std::cos(lat_rad);
   const double s_lon = std::sin(lon_rad);
   const double c_lon = std::cos(lon_rad);
-  return mc::Matrix3x3{{{
-      {{-s_lat * c_lon, -s_lat * s_lon, c_lat}},
-      {{-s_lon, c_lon, 0.0}},
-      {{-c_lat * c_lon, -c_lat * s_lon, -s_lat}},
-  }}};
+  return mc::Matrix3x3{
+      -s_lat * c_lon, -s_lat * s_lon, c_lat,
+      -s_lon,         c_lon,          0.0,
+      -c_lat * c_lon, -c_lat * s_lon, -s_lat,
+  };
 }
 
 }  // namespace
