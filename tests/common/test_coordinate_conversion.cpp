@@ -3,16 +3,28 @@
 #include <array>
 #include <cmath>
 
+#include "common/attitude.h"
+#include "common/body_coordinate.h"
+#include "common/constants.h"
 #include "common/coordinate_conversion.h"
 #include "common/global_coordinate.h"
+#include "common/local_coordinate.h"
 
-using myapp::common::GlobalCoordinate;
-using myapp::common::GlobalToGeo;
+using myapp::common::Attitude;
+using myapp::common::BodyCoordinate;
+using myapp::common::BodyToLocal;
 using myapp::common::GeoCoordinate;
 using myapp::common::GeoToGlobal;
+using myapp::common::GeoToMap;
+using myapp::common::GlobalCoordinate;
+using myapp::common::GlobalToGeo;
+using myapp::common::GlobalToLocal;
+using myapp::common::kHalfPi;
+using myapp::common::LocalCoordinate;
+using myapp::common::LocalToBody;
+using myapp::common::LocalToGlobal;
 using myapp::common::MapCoordinate;
 using myapp::common::MapToGeo;
-using myapp::common::GeoToMap;
 
 TEST_CASE("GeoToMap: ラジアン -> 度", "[coord_conv]") {
   // pi/4 rad = 45 deg
@@ -116,6 +128,15 @@ TEST_CASE("GlobalToGeo: 南極上空 1000m", "[coord_conv][ecef]") {
   REQUIRE(kG.Altitude() == Catch::Approx(1000.0).margin(1e-6));
 }
 
+TEST_CASE("GlobalToGeo: 自転軸近傍ガード (p < 1mm)", "[coord_conv][ecef]") {
+  // X=Y=0 だが浮動小数演算で生じる程度の微小値が入っているケース。
+  // 閾値 (1mm) 未満なら極ケースに落ちて、緯度は ±π/2 / 経度は 0 になる。
+  const GeoCoordinate kG = GlobalToGeo(GlobalCoordinate{1e-6, -1e-6, 6356752.314245179});
+  REQUIRE(kG.Latitude() == Catch::Approx(kHalfPi));
+  REQUIRE(kG.Longitude() == Catch::Approx(0.0));
+  REQUIRE(kG.Altitude() == Catch::Approx(0.0).margin(1e-3));
+}
+
 TEST_CASE("ecef <-> geo ラウンドトリップ (各種地点)", "[coord_conv][ecef]") {
   // 様々な (緯度, 経度, 高度) を GeoToGlobal -> GlobalToGeo して元に戻ることを
   // 確認する。Bowring 法は地表近傍で機械精度に収束するので、margin/epsilon
@@ -142,4 +163,79 @@ TEST_CASE("ecef <-> geo ラウンドトリップ (各種地点)", "[coord_conv][
     REQUIRE(kRound.Longitude() == Catch::Approx(kOriginal.Longitude()).margin(1e-10));
     REQUIRE(kRound.Altitude() == Catch::Approx(kOriginal.Altitude()).margin(1e-6));
   }
+}
+
+TEST_CASE("LocalToGlobal / GlobalToLocal: 原点ラウンドトリップ", "[coord_conv][ned]") {
+  // 参照点の真上に立つ NED(0,0,0) 位置は、ECEF に変換しても参照点 ECEF と一致する。
+  const GeoCoordinate kRef = MapToGeo(MapCoordinate{35.6812, 139.7671, 40.0});
+  const GlobalCoordinate kRefEcef = GeoToGlobal(kRef);
+  const GlobalCoordinate kP = LocalToGlobal(LocalCoordinate{0.0, 0.0, 0.0}, kRef);
+  REQUIRE(kP.X() == Catch::Approx(kRefEcef.X()));
+  REQUIRE(kP.Y() == Catch::Approx(kRefEcef.Y()));
+  REQUIRE(kP.Z() == Catch::Approx(kRefEcef.Z()));
+
+  const LocalCoordinate kBack = GlobalToLocal(kP, kRef);
+  REQUIRE(kBack.X() == Catch::Approx(0.0).margin(1e-6));
+  REQUIRE(kBack.Y() == Catch::Approx(0.0).margin(1e-6));
+  REQUIRE(kBack.Z() == Catch::Approx(0.0).margin(1e-6));
+}
+
+TEST_CASE("LocalToGlobal / GlobalToLocal: 一般ラウンドトリップ", "[coord_conv][ned]") {
+  const GeoCoordinate kRef = MapToGeo(MapCoordinate{35.6812, 139.7671, 40.0});
+  const LocalCoordinate kOriginal{100.0, -50.0, 25.0};  // 北100m, 東-50m, 下25m
+  const GlobalCoordinate kP = LocalToGlobal(kOriginal, kRef);
+  const LocalCoordinate kBack = GlobalToLocal(kP, kRef);
+  REQUIRE(kBack.X() == Catch::Approx(kOriginal.X()).margin(1e-6));
+  REQUIRE(kBack.Y() == Catch::Approx(kOriginal.Y()).margin(1e-6));
+  REQUIRE(kBack.Z() == Catch::Approx(kOriginal.Z()).margin(1e-6));
+}
+
+TEST_CASE("LocalToGlobal: 赤道・本初子午線で N/E/D が ECEF 軸に整列", "[coord_conv][ned]") {
+  // 赤道・本初子午線 (φ=0, λ=0) では、
+  //   N 軸 = +Z ECEF, E 軸 = +Y ECEF, D 軸 = -X ECEF
+  // となる (NedToGlobalRotation の代数から確認可能)。
+  const GeoCoordinate kRef{0.0, 0.0, 0.0};
+  const GlobalCoordinate kRefEcef = GeoToGlobal(kRef);
+
+  // 北 1m
+  const GlobalCoordinate kN = LocalToGlobal(LocalCoordinate{1.0, 0.0, 0.0}, kRef);
+  REQUIRE((kN.Z() - kRefEcef.Z()) == Catch::Approx(1.0).margin(1e-9));
+  REQUIRE((kN.X() - kRefEcef.X()) == Catch::Approx(0.0).margin(1e-9));
+  REQUIRE((kN.Y() - kRefEcef.Y()) == Catch::Approx(0.0).margin(1e-9));
+
+  // 東 1m
+  const GlobalCoordinate kE = LocalToGlobal(LocalCoordinate{0.0, 1.0, 0.0}, kRef);
+  REQUIRE((kE.Y() - kRefEcef.Y()) == Catch::Approx(1.0).margin(1e-9));
+
+  // 下 1m  (= ECEF -X 方向)
+  const GlobalCoordinate kD = LocalToGlobal(LocalCoordinate{0.0, 0.0, 1.0}, kRef);
+  REQUIRE((kD.X() - kRefEcef.X()) == Catch::Approx(-1.0).margin(1e-9));
+}
+
+TEST_CASE("BodyToLocal / LocalToBody: ゼロ姿勢は恒等", "[coord_conv][body]") {
+  const Attitude kZero{0.0, 0.0, 0.0};
+  const BodyCoordinate kB{1.0, 2.0, 3.0};
+  const LocalCoordinate kL = BodyToLocal(kB, kZero);
+  REQUIRE(kL.X() == Catch::Approx(1.0));
+  REQUIRE(kL.Y() == Catch::Approx(2.0));
+  REQUIRE(kL.Z() == Catch::Approx(3.0));
+}
+
+TEST_CASE("BodyToLocal: yaw 90度は body +X を NED +E に写す", "[coord_conv][body]") {
+  // yaw=+π/2 で機体 +X (前方) は NED の +E (東) を向く。
+  const Attitude kYaw{0.0, 0.0, kHalfPi};
+  const LocalCoordinate kL = BodyToLocal(BodyCoordinate{1.0, 0.0, 0.0}, kYaw);
+  REQUIRE(kL.X() == Catch::Approx(0.0).margin(1e-12));
+  REQUIRE(kL.Y() == Catch::Approx(1.0).margin(1e-12));
+  REQUIRE(kL.Z() == Catch::Approx(0.0).margin(1e-12));
+}
+
+TEST_CASE("BodyToLocal / LocalToBody: ラウンドトリップ", "[coord_conv][body]") {
+  const Attitude kAtt{0.3, -0.7, 1.2};
+  const BodyCoordinate kOriginal{1.5, -2.5, 0.7};
+  const LocalCoordinate kL = BodyToLocal(kOriginal, kAtt);
+  const BodyCoordinate kBack = LocalToBody(kL, kAtt);
+  REQUIRE(kBack.X() == Catch::Approx(kOriginal.X()).margin(1e-12));
+  REQUIRE(kBack.Y() == Catch::Approx(kOriginal.Y()).margin(1e-12));
+  REQUIRE(kBack.Z() == Catch::Approx(kOriginal.Z()).margin(1e-12));
 }
