@@ -54,8 +54,8 @@ class LocalCoordinate {
    * @return 加算後のローカル位置。
    */
   LocalCoordinate operator+(const Vector3D& displacement) const {
-    return LocalCoordinate{v_.x_ + displacement.x_, v_.y_ + displacement.y_,
-                           v_.z_ + displacement.z_};
+    const Vector3D kR = v_ + displacement;
+    return LocalCoordinate{kR.x_, kR.y_, kR.z_};
   }
 
   /**
@@ -64,8 +64,8 @@ class LocalCoordinate {
    * @return 減算後のローカル位置。
    */
   LocalCoordinate operator-(const Vector3D& displacement) const {
-    return LocalCoordinate{v_.x_ - displacement.x_, v_.y_ - displacement.y_,
-                           v_.z_ - displacement.z_};
+    const Vector3D kR = v_ - displacement;
+    return LocalCoordinate{kR.x_, kR.y_, kR.z_};
   }
 
  private:

@@ -33,10 +33,20 @@ cpp_sample/
 │       ├── logging.h / .cpp    spdlog の初期化・shutdown
 │       ├── vector3d.h          3次元ベクトル (演算サンプル、header-only)
 │       ├── attitude.h          姿勢角 (ロール/ピッチ/ヨー、header-only)
+│       ├── matrix3x3.h         3x3 行列 (回転行列・線形変換、header-only)
 │       ├── global_coordinate.h ECEF 座標 (グローバル座標系、header-only)
+│       ├── local_coordinate.h  NED 座標 (ローカル接平面、header-only)
+│       ├── body_coordinate.h   機体座標 (header-only)
 │       ├── geo_coordinate.h    測地座標 (緯度経度高度、header-only)
 │       ├── map_coordinate.h    地図座標 (header-only)
 │       └── coordinate_conversion.h  座標系変換ユーティリティ (header-only)
+├── example/                    座標型を使ったスタンドアロンのサンプル群
+│   ├── README.md               ビルド方法と各サンプルの概要
+│   ├── findings.md             サンプル実装を通じた API 観察結果
+│   ├── 01_offset_from_center.cpp
+│   ├── 02_bearing.cpp
+│   ├── 03_path_simulation.cpp
+│   └── 04_misc.cpp
 └── tests/
     ├── CMakeLists.txt          Catch2 amalgamated を共有 static lib 化 + test_greet
     ├── catch2/                 Catch2 v3 amalgamated (header + .cpp)
@@ -45,7 +55,10 @@ cpp_sample/
         ├── CMakeLists.txt      common 配下モジュールの単体テスト群
         ├── test_vector3d.cpp
         ├── test_attitude.cpp
+        ├── test_matrix3x3.cpp
         ├── test_global_coordinate.cpp
+        ├── test_local_coordinate.cpp
+        ├── test_body_coordinate.cpp
         ├── test_geo_coordinate.cpp
         └── test_coordinate_conversion.cpp
 ```
@@ -162,10 +175,20 @@ cmake --build build-cov --target coverage
   演算処理のサンプル (header-only)。四則演算と内積を持つ 3 次元ベクトル型。
   不変条件を持たないため `struct` で定義している例。
 - [src/common/attitude.h](src/common/attitude.h) — 姿勢角 (ロール/ピッチ/ヨー) を表す header-only モジュール。
+- [src/common/matrix3x3.h](src/common/matrix3x3.h) —
+  3x3 行列 (header-only)。`m11_`…`m33_` の named member を行優先で持ち、
+  行列積・行列ベクトル積・転置と、姿勢角からの回転行列生成 `FromAttitude`
+  (ZYX オイラー角, body → NED) を提供する。
 - [src/common/global_coordinate.h](src/common/global_coordinate.h) /
-  [src/common/geo_coordinate.h](src/common/geo_coordinate.h) /
+  [src/common/local_coordinate.h](src/common/local_coordinate.h) /
+  [src/common/body_coordinate.h](src/common/body_coordinate.h) —
+  ECEF (グローバル) / NED (ローカル接平面) / 機体の各座標型 (header-only)。
+  いずれもアフィン点として扱い、提供する演算子は
+  `Point + Vector3D = Point` / `Point - Vector3D = Point` / `Point - Point = Vector3D` のみ。
+  Point 同士の加算や、異なる Point 型間の演算は意図的に提供しない。
+- [src/common/geo_coordinate.h](src/common/geo_coordinate.h) /
   [src/common/map_coordinate.h](src/common/map_coordinate.h) —
-  ECEF (グローバル座標系) / 測地 / 地図の各座標型 (header-only)。
+  測地 (緯度経度高度) / 地図の各座標型 (header-only)。
 - [src/common/coordinate_conversion.h](src/common/coordinate_conversion.h) —
   上記座標系間の変換ユーティリティ (header-only)。
 
@@ -176,11 +199,20 @@ cmake --build build-cov --target coverage
 - [tests/common/test_vector3d.cpp](tests/common/test_vector3d.cpp) — Catch2 の
   `SECTION` を使った分岐構造のサンプル。
 - [tests/common/test_attitude.cpp](tests/common/test_attitude.cpp) — 姿勢角モジュールの単体テスト。
+- [tests/common/test_matrix3x3.cpp](tests/common/test_matrix3x3.cpp) — 3x3 行列および `FromAttitude` の単体テスト。
 - [tests/common/test_global_coordinate.cpp](tests/common/test_global_coordinate.cpp) /
+  [tests/common/test_local_coordinate.cpp](tests/common/test_local_coordinate.cpp) /
+  [tests/common/test_body_coordinate.cpp](tests/common/test_body_coordinate.cpp) /
   [tests/common/test_geo_coordinate.cpp](tests/common/test_geo_coordinate.cpp) —
   各座標型の単体テスト。
 - [tests/common/test_coordinate_conversion.cpp](tests/common/test_coordinate_conversion.cpp) —
   座標系変換の単体テスト。
+
+### 使用例
+
+- [example/](example/) — 座標型を実際に使ったスタンドアロンのサンプル。
+  ルート CMake からは取り込まず、各 `.cpp` を `clang++` / `g++` で直接ビルドする。
+  詳細は [example/README.md](example/README.md)、API 観察は [example/findings.md](example/findings.md) を参照。
 
 ## ロギング方針
 

@@ -54,8 +54,8 @@ class GlobalCoordinate {
    * @return 加算後の ECEF 位置。
    */
   GlobalCoordinate operator+(const Vector3D& displacement) const {
-    return GlobalCoordinate{v_.x_ + displacement.x_, v_.y_ + displacement.y_,
-                            v_.z_ + displacement.z_};
+    const Vector3D kR = v_ + displacement;
+    return GlobalCoordinate{kR.x_, kR.y_, kR.z_};
   }
 
   /**
@@ -64,8 +64,8 @@ class GlobalCoordinate {
    * @return 減算後の ECEF 位置。
    */
   GlobalCoordinate operator-(const Vector3D& displacement) const {
-    return GlobalCoordinate{v_.x_ - displacement.x_, v_.y_ - displacement.y_,
-                            v_.z_ - displacement.z_};
+    const Vector3D kR = v_ - displacement;
+    return GlobalCoordinate{kR.x_, kR.y_, kR.z_};
   }
 
  private:

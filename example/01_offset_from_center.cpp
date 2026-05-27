@@ -43,11 +43,11 @@ mc::Matrix3x3 NedToEcefRotation(double lat_rad, double lon_rad) {
   const double s_lon = std::sin(lon_rad);
   const double c_lon = std::cos(lon_rad);
   // 列ベクトルが順に North, East, Down を表す (Down = -Up)。
-  return mc::Matrix3x3{{{
-      {{-s_lat * c_lon, -s_lon, -c_lat * c_lon}},
-      {{-s_lat * s_lon, c_lon, -c_lat * s_lon}},
-      {{c_lat, 0.0, -s_lat}},
-  }}};
+  return mc::Matrix3x3{
+      -s_lat * c_lon, -s_lon, -c_lat * c_lon,
+      -s_lat * s_lon, c_lon,  -c_lat * s_lon,
+      c_lat,          0.0,    -s_lat,
+  };
 }
 
 }  // namespace
