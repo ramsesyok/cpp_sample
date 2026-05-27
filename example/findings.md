@@ -50,15 +50,15 @@
 
 一方、本サンプルで必要だったのに **未提供** だったもの:
 
-- NEU (`LocalCoordinate`) ⇔ ECEF (`GlobalCoordinate`) の変換。
+- NED (`LocalCoordinate`) ⇔ ECEF (`GlobalCoordinate`) の変換。
   参照点となる `GeoCoordinate` (lat/lon) が必要なので、関数シグネチャは
   `LocalToGlobal(local, ref_geo)` のような形になる。サンプル01, 04 で
-  `NeuToEcefRotation` / `EcefToNeuRotation` を局所実装した。
-- Body (`BodyCoordinate`) ⇔ NEU (`LocalCoordinate`) の変換。
-  `FromAttitude` が ZYX オイラー角の回転行列を返すが、Body 軸 = (Forward, Right, Down)
-  と NEU 軸 = (North, East, Up) の **軸の取り方の違い** (特に Z の符号反転) を
-  考慮する必要があり、現状では呼び出し側でその並べ替えを書く必要がある。
-  サンプル01で perm 行列として埋め込んだ。
+  `NedToEcefRotation` / `EcefToNedRotation` を局所実装した。
+- Body (`BodyCoordinate`) ⇔ NED (`LocalCoordinate`) の変換。
+  `FromAttitude` が ZYX オイラー角の回転行列 (body → NED) を返し、
+  Body 軸 = (Forward, Right, Down) と NED 軸 = (North, East, Down) で
+  Z の符号も一致するため、軸並べ替えは不要で R(att) をそのまま適用できる。
+  ただしフレームが型に乗っていない点は依然として注意が必要 (節6参照)。
 
 ## 5. 地表面計算ユーティリティ
 
@@ -72,7 +72,7 @@
 ## 6. 型安全性に関する追加観察
 
 - `GlobalCoordinate + Vector3D` がコンパイル可能だが、`Vector3D` が
-  **どのフレーム** (ECEF 軸 / NEU 軸 / Body 軸) で表されているかは型に
+  **どのフレーム** (ECEF 軸 / NED 軸 / Body 軸) で表されているかは型に
   乗らないため、誤って Body 軸の Vector3D を ECEF の点に足してしまう
   バグが書ける。フレームをタグ付けした `Vector3D<EcefFrame>` のような
   設計もありうるが、現在の設計方針からは外れるため要相談。

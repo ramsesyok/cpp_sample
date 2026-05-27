@@ -85,7 +85,7 @@ struct Matrix3x3 {
  * 規約: yaw(psi, Z 軸) → pitch(theta, Y 軸) → roll(phi, X 軸) の順に
  * 内因性回転を適用する航空機標準 (Tait-Bryan ZYX)。すなわち
  *   R = Rz(psi) * Ry(theta) * Rx(phi)
- * となる。R は機体座標系のベクトルを参照座標系 (NEU 等) へ変換する
+ * となる。R は機体座標系のベクトルを参照座標系 (NED 等) へ変換する
  * 「body → reference」回転として用いることを想定する。
  *
  * @param a  姿勢角 (phi: roll, theta: pitch, psi: yaw, いずれも [rad])。
