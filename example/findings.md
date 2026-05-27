@@ -45,7 +45,7 @@
 
 `coordinate_conversion.h` には以下があり、それらは整っている:
 
-- `ToMap` / `ToGeo` (rad ↔ deg)
+- `GeoToMap` / `MapToGeo` (rad ↔ deg)
 - `GeoToGlobal` / `GlobalToGeo` (geodetic ↔ ECEF, Bowring 1976)
 
 一方、本サンプルで必要だったのに **未提供** だったもの:

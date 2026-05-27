@@ -8,7 +8,7 @@ namespace myapp::common {
  *
  * 地図表示・人間が読み書きする入出力で使う想定。ラジアン基準の
  * GeoCoordinate との取り違えを防ぐため独立した型とし、暗黙変換は
- * 持たせない (変換は coordinate_conversion.h の ToMap / ToGeo を使う)。
+ * 持たせない (変換は coordinate_conversion.h の GeoToMap / MapToGeo を使う)。
  */
 class MapCoordinate {
  public:

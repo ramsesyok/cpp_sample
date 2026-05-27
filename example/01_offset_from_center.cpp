@@ -55,7 +55,7 @@ mc::Matrix3x3 NedToEcefRotation(double lat_rad, double lon_rad) {
 int main() {
   // 機体は東京駅付近の上空 500m。
   const mc::MapCoordinate origin_map{35.6812, 139.7671, 500.0};
-  const mc::GeoCoordinate origin_geo = mc::ToGeo(origin_map);
+  const mc::GeoCoordinate origin_geo = mc::MapToGeo(origin_map);
   const mc::GlobalCoordinate origin_ecef = mc::GeoToGlobal(origin_geo);
 
   // 姿勢: ヨー 90deg (機体は東を向く)、ピッチ・ロール 0。
@@ -85,7 +85,7 @@ int main() {
   // GlobalCoordinate + Vector3D で最終位置。
   const mc::GlobalCoordinate sensor_ecef = origin_ecef + offset_ecef;
   const mc::GeoCoordinate sensor_geo = mc::GlobalToGeo(sensor_ecef);
-  const mc::MapCoordinate sensor_map = mc::ToMap(sensor_geo);
+  const mc::MapCoordinate sensor_map = mc::GeoToMap(sensor_geo);
 
   std::cout << "origin (map): " << origin_map.LatitudeDeg() << ", "
             << origin_map.LongitudeDeg() << ", alt=" << origin_map.AltitudeM() << "\n";

@@ -11,21 +11,21 @@ using myapp::common::GlobalToGeo;
 using myapp::common::GeoCoordinate;
 using myapp::common::GeoToGlobal;
 using myapp::common::MapCoordinate;
-using myapp::common::ToGeo;
-using myapp::common::ToMap;
+using myapp::common::MapToGeo;
+using myapp::common::GeoToMap;
 
-TEST_CASE("ToMap: ラジアン -> 度", "[coord_conv]") {
+TEST_CASE("GeoToMap: ラジアン -> 度", "[coord_conv]") {
   // pi/4 rad = 45 deg
   const GeoCoordinate kG{0.7853981633974483, 1.5707963267948966, 123.0};
-  const MapCoordinate kM = ToMap(kG);
+  const MapCoordinate kM = GeoToMap(kG);
   REQUIRE(kM.LatitudeDeg() == Catch::Approx(45.0));
   REQUIRE(kM.LongitudeDeg() == Catch::Approx(90.0));
   REQUIRE(kM.AltitudeM() == Catch::Approx(123.0));
 }
 
-TEST_CASE("ToGeo: 度 -> ラジアン", "[coord_conv]") {
+TEST_CASE("MapToGeo: 度 -> ラジアン", "[coord_conv]") {
   const MapCoordinate kM{180.0, -90.0, 50.0};
-  const GeoCoordinate kG = ToGeo(kM);
+  const GeoCoordinate kG = MapToGeo(kM);
   REQUIRE(kG.Latitude() == Catch::Approx(3.141592653589793));
   REQUIRE(kG.Longitude() == Catch::Approx(-1.5707963267948966));
   REQUIRE(kG.Altitude() == Catch::Approx(50.0));
@@ -79,7 +79,7 @@ TEST_CASE("GeoToGlobal: 原点からの距離が a に近い (赤道)", "[coord_
 
 TEST_CASE("変換ラウンドトリップ (deg <-> rad)", "[coord_conv]") {
   const MapCoordinate kOriginal{35.6812, 139.7671, 40.0};  // 東京駅近辺
-  const MapCoordinate kRound = ToMap(ToGeo(kOriginal));
+  const MapCoordinate kRound = GeoToMap(MapToGeo(kOriginal));
   REQUIRE(kRound.LatitudeDeg() == Catch::Approx(kOriginal.LatitudeDeg()));
   REQUIRE(kRound.LongitudeDeg() == Catch::Approx(kOriginal.LongitudeDeg()));
   REQUIRE(kRound.AltitudeM() == Catch::Approx(kOriginal.AltitudeM()));
@@ -135,7 +135,7 @@ TEST_CASE("ecef <-> geo ラウンドトリップ (各種地点)", "[coord_conv][
   }};
 
   for (const auto& c : kCases) {
-    const GeoCoordinate kOriginal = ToGeo(MapCoordinate{c.lat_deg_, c.lon_deg_, c.alt_m_});
+    const GeoCoordinate kOriginal = MapToGeo(MapCoordinate{c.lat_deg_, c.lon_deg_, c.alt_m_});
     const GeoCoordinate kRound = GlobalToGeo(GeoToGlobal(kOriginal));
     INFO("case lat_deg=" << c.lat_deg_ << " lon_deg=" << c.lon_deg_ << " alt_m=" << c.alt_m_);
     REQUIRE(kRound.Latitude() == Catch::Approx(kOriginal.Latitude()).margin(1e-10));

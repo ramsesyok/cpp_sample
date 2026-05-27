@@ -58,8 +58,8 @@ mc::Matrix3x3 EcefToNedRotation(double lat_rad, double lon_rad) {
 
 int main() {
   // (a) 2 点間距離と NED 分解。
-  const mc::GeoCoordinate a_geo = mc::ToGeo(mc::MapCoordinate{35.6812, 139.7671, 0.0});
-  const mc::GeoCoordinate b_geo = mc::ToGeo(mc::MapCoordinate{35.6900, 139.7800, 50.0});
+  const mc::GeoCoordinate a_geo = mc::MapToGeo(mc::MapCoordinate{35.6812, 139.7671, 0.0});
+  const mc::GeoCoordinate b_geo = mc::MapToGeo(mc::MapCoordinate{35.6900, 139.7800, 50.0});
   const mc::GlobalCoordinate a_ecef = mc::GeoToGlobal(a_geo);
   const mc::GlobalCoordinate b_ecef = mc::GeoToGlobal(b_geo);
 
@@ -73,7 +73,7 @@ int main() {
 
   // (b) 外積で 3 点が作る平面の法線。
   const mc::Vector3D p_ab = b_ecef - a_ecef;
-  const mc::GeoCoordinate c_geo = mc::ToGeo(mc::MapCoordinate{35.6700, 139.7900, 0.0});
+  const mc::GeoCoordinate c_geo = mc::MapToGeo(mc::MapCoordinate{35.6700, 139.7900, 0.0});
   const mc::GlobalCoordinate c_ecef = mc::GeoToGlobal(c_geo);
   const mc::Vector3D p_ac = c_ecef - a_ecef;
   const mc::Vector3D normal = Cross(p_ab, p_ac);
@@ -98,7 +98,7 @@ int main() {
   const mc::Matrix3x3 r_n2e = r.Transpose();
   const mc::Vector3D ob_ecef = r_n2e * ob_ned;
   const mc::GlobalCoordinate target = a_ecef + ob_ecef;
-  const mc::MapCoordinate target_map = mc::ToMap(mc::GlobalToGeo(target));
+  const mc::MapCoordinate target_map = mc::GeoToMap(mc::GlobalToGeo(target));
   std::cout << "10m forward from A: lat=" << target_map.LatitudeDeg()
             << " lon=" << target_map.LongitudeDeg()
             << " alt=" << target_map.AltitudeM() << "\n";

@@ -3,8 +3,8 @@
 
 #include <cmath>
 
-#include "common/global_coordinate.h"
 #include "common/geo_coordinate.h"
+#include "common/global_coordinate.h"
 #include "common/map_coordinate.h"
 
 namespace myapp::common {
@@ -34,7 +34,7 @@ inline constexpr double kFirstEccentricitySq = kFlattening * (2.0 - kFlattening)
  * @param g  ラジアン基準のジオデティック座標。
  * @return 度基準の地図座標。
  */
-inline MapCoordinate ToMap(const GeoCoordinate& g) {
+inline MapCoordinate GeoToMap(const GeoCoordinate& g) {
   // 180 / pi。pi は M_PI が処理系依存なので定数を直書きする。
   constexpr double kRadToDeg = 57.29577951308232087679815481410517;
   return MapCoordinate{
@@ -49,7 +49,7 @@ inline MapCoordinate ToMap(const GeoCoordinate& g) {
  * @param m  度基準の地図座標。
  * @return ラジアン基準のジオデティック座標。
  */
-inline GeoCoordinate ToGeo(const MapCoordinate& m) {
+inline GeoCoordinate MapToGeo(const MapCoordinate& m) {
   // pi / 180。
   constexpr double kDegToRad = 0.01745329251994329576923690768488613;
   return GeoCoordinate{
@@ -70,7 +70,7 @@ inline GeoCoordinate ToGeo(const MapCoordinate& m) {
  *   Z = (N(1 - e²) + h) sinφ
  * @endcode
  *
- * 入力は GeoCoordinate (ラジアン基準) 限定。度入力は ToGeo() で
+ * 入力は GeoCoordinate (ラジアン基準) 限定。度入力は MapToGeo() で
  * 一度ラジアンに変換してから渡す。
  *
  * @param g  ラジアン基準のジオデティック座標。

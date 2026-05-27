@@ -8,7 +8,7 @@ namespace myapp::common {
  *
  * 度単位の MapCoordinate との取り違えを防ぐため独立した型とし、
  * 暗黙変換は持たせない (変換は coordinate_conversion.h の
- * ToMap / ToGeo を使う)。
+ * GeoToMap / MapToGeo を使う)。
  */
 class GeoCoordinate {
  public:

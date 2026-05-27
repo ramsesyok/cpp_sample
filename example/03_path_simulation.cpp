@@ -82,12 +82,12 @@ int main() {
   std::vector<Waypoint> path;
   path.reserve(raw.size());
   for (const auto& [m, t] : raw) {
-    path.push_back(Waypoint{mc::GeoToGlobal(mc::ToGeo(m)), t});
+    path.push_back(Waypoint{mc::GeoToGlobal(mc::MapToGeo(m)), t});
   }
 
   for (double t : {0.0, 30.0, 90.0, 150.0, 240.0, 300.0, 400.0}) {
     const State s = SampleAt(path, t);
-    const mc::MapCoordinate m = mc::ToMap(mc::GlobalToGeo(s.position));
+    const mc::MapCoordinate m = mc::GeoToMap(mc::GlobalToGeo(s.position));
     std::cout << "t=" << t << "s  lat=" << m.LatitudeDeg()
               << " lon=" << m.LongitudeDeg() << " alt=" << m.AltitudeM()
               << "  |v|=" << Length(s.velocity) << " m/s\n";

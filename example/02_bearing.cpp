@@ -56,21 +56,21 @@ double GreatCircleDistanceM(const mc::GeoCoordinate& a, const mc::GeoCoordinate&
 
 int main() {
   // 東京駅 → シドニー (約南南東)。
-  const mc::GeoCoordinate tokyo = mc::ToGeo(mc::MapCoordinate{35.6812, 139.7671, 0.0});
-  const mc::GeoCoordinate sydney = mc::ToGeo(mc::MapCoordinate{-33.8688, 151.2093, 0.0});
+  const mc::GeoCoordinate tokyo = mc::MapToGeo(mc::MapCoordinate{35.6812, 139.7671, 0.0});
+  const mc::GeoCoordinate sydney = mc::MapToGeo(mc::MapCoordinate{-33.8688, 151.2093, 0.0});
 
   std::cout << "Tokyo  -> Sydney: bearing = "
             << InitialBearingDeg(tokyo, sydney) << " deg, "
             << "distance = " << GreatCircleDistanceM(tokyo, sydney) << " m\n";
 
   // 真東のチェック: 同じ緯度で経度だけ +1 deg。
-  const mc::GeoCoordinate p1 = mc::ToGeo(mc::MapCoordinate{0.0, 0.0, 0.0});
-  const mc::GeoCoordinate p2 = mc::ToGeo(mc::MapCoordinate{0.0, 1.0, 0.0});
+  const mc::GeoCoordinate p1 = mc::MapToGeo(mc::MapCoordinate{0.0, 0.0, 0.0});
+  const mc::GeoCoordinate p2 = mc::MapToGeo(mc::MapCoordinate{0.0, 1.0, 0.0});
   std::cout << "Equator east step: bearing = "
             << InitialBearingDeg(p1, p2) << " deg (expected ~90)\n";
 
   // 真北のチェック: 同じ経度で緯度だけ +1 deg。
-  const mc::GeoCoordinate p3 = mc::ToGeo(mc::MapCoordinate{1.0, 0.0, 0.0});
+  const mc::GeoCoordinate p3 = mc::MapToGeo(mc::MapCoordinate{1.0, 0.0, 0.0});
   std::cout << "Equator north step: bearing = "
             << InitialBearingDeg(p1, p3) << " deg (expected ~0)\n";
 
