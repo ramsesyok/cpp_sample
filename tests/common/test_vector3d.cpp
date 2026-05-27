@@ -2,6 +2,7 @@
 
 #include "common/vector3d.h"
 
+using myapp::common::Dot;
 using myapp::common::Vector3D;
 
 TEST_CASE("Vector3D: 加算", "[vector3d]") {
@@ -140,5 +141,10 @@ TEST_CASE("Vector3D: 内積", "[vector3d]") {
   SECTION("自身との内積はノルム二乗") {
     const Vector3D kA{3.0, 4.0, 0.0};
     REQUIRE(kA.Dot(kA) == Catch::Approx(25.0));
+  }
+  SECTION("自由関数版 Dot(a, b) はメンバ版と等価") {
+    const Vector3D kA{1.0, 2.0, 3.0};
+    const Vector3D kB{4.0, -5.0, 6.0};
+    REQUIRE(Dot(kA, kB) == Catch::Approx(kA.Dot(kB)));
   }
 }

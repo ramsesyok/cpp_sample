@@ -84,6 +84,19 @@ struct Matrix3x3 {
  * @param a  姿勢角 (phi: roll, theta: pitch, psi: yaw, いずれも [rad])。
  * @return 対応する 3x3 回転行列。
  */
+/**
+ * @brief 行列ベクトル積の自由関数版 (numpy.dot 風)。
+ *
+ * `m * v` と等価。numpy で行列ベクトル積を `np.dot(M, v)` と書く流儀に
+ * 揃えたい場合や、`Dot(...)` で内積・行列積の表記を統一したい場合に使う。
+ * @param m  3x3 行列。
+ * @param v  3次元ベクトル (列ベクトルとみなす)。
+ * @return 変換後のベクトル。
+ */
+[[nodiscard]] constexpr Vector3D Dot(const Matrix3x3& m, const Vector3D& v) {
+  return m * v;
+}
+
 inline Matrix3x3 FromAttitude(const Attitude& a) {
   const double kCp = std::cos(a.phi_);
   const double kSp = std::sin(a.phi_);
