@@ -1,6 +1,6 @@
 // 例4: その他、座標を用いた典型計算のサンプル。
 //   (a) 2 つの GlobalCoordinate 間の直線距離 (ECEF chord 距離) と
-//       NEU 系で見た北/東/上成分への分解。
+//       NED 系で見た北/東/下成分への分解。
 //   (b) Vector3D の外積 (Cross product) を使った面法線の計算。
 //   (c) 姿勢角 (Attitude) の補間 (オイラー角の単純線形補間)。
 //   (d) BodyCoordinate を World に投影してみる逆方向の動作。
@@ -41,8 +41,8 @@ double Length(const mc::Vector3D& v) {
   return std::sqrt(v.Dot(v));
 }
 
-// ECEF → NEU の回転 (例1の転置に相当)。
-mc::Matrix3x3 EcefToNeuRotation(double lat_rad, double lon_rad) {
+// ECEF → NED の回転 (例1の転置に相当)。
+mc::Matrix3x3 EcefToNedRotation(double lat_rad, double lon_rad) {
   const double s_lat = std::sin(lat_rad);
   const double c_lat = std::cos(lat_rad);
   const double s_lon = std::sin(lon_rad);
@@ -50,14 +50,14 @@ mc::Matrix3x3 EcefToNeuRotation(double lat_rad, double lon_rad) {
   return mc::Matrix3x3{{{
       {{-s_lat * c_lon, -s_lat * s_lon, c_lat}},
       {{-s_lon, c_lon, 0.0}},
-      {{c_lat * c_lon, c_lat * s_lon, s_lat}},
+      {{-c_lat * c_lon, -c_lat * s_lon, -s_lat}},
   }}};
 }
 
 }  // namespace
 
 int main() {
-  // (a) 2 点間距離と NEU 分解。
+  // (a) 2 点間距離と NED 分解。
   const mc::GeoCoordinate a_geo = mc::ToGeo(mc::MapCoordinate{35.6812, 139.7671, 0.0});
   const mc::GeoCoordinate b_geo = mc::ToGeo(mc::MapCoordinate{35.6900, 139.7800, 50.0});
   const mc::GlobalCoordinate a_ecef = mc::GeoToGlobal(a_geo);
@@ -66,10 +66,10 @@ int main() {
   const mc::Vector3D ecef_delta = b_ecef - a_ecef;
   std::cout << "chord distance = " << Length(ecef_delta) << " m\n";
 
-  const mc::Matrix3x3 r = EcefToNeuRotation(a_geo.Latitude(), a_geo.Longitude());
-  const mc::Vector3D neu_delta = r * ecef_delta;
-  std::cout << "NEU delta: N=" << neu_delta.x_ << " E=" << neu_delta.y_
-            << " U=" << neu_delta.z_ << "\n";
+  const mc::Matrix3x3 r = EcefToNedRotation(a_geo.Latitude(), a_geo.Longitude());
+  const mc::Vector3D ned_delta = r * ecef_delta;
+  std::cout << "NED delta: N=" << ned_delta.x_ << " E=" << ned_delta.y_
+            << " D=" << ned_delta.z_ << "\n";
 
   // (b) 外積で 3 点が作る平面の法線。
   const mc::Vector3D p_ab = b_ecef - a_ecef;
@@ -90,13 +90,13 @@ int main() {
             << " theta=" << blended.theta_ << " psi=" << blended.psi_ << "\n";
 
   // (d) Body→World: BodyCoordinate のオフセットを姿勢ゼロ・参照点 a で
-  //     ローカル系に変換し、さらに NEU→ECEF。
+  //     ローカル系に変換し、さらに NED→ECEF。
   const mc::BodyCoordinate offset_b{10.0, 0.0, 0.0};  // 前方 10m
   const mc::Vector3D ob_vec = offset_b - mc::BodyCoordinate{0.0, 0.0, 0.0};
-  // 軸の対応 (F,R,D) → (N,E,U) の符号付け替え。姿勢ゼロなので回転なし。
-  const mc::Vector3D ob_neu{ob_vec.x_, ob_vec.y_, -ob_vec.z_};
+  // 軸の対応 (F,R,D) → (N,E,D) は同じ符号。姿勢ゼロなので回転も恒等。
+  const mc::Vector3D ob_ned = ob_vec;
   const mc::Matrix3x3 r_n2e = r.Transpose();
-  const mc::Vector3D ob_ecef = r_n2e * ob_neu;
+  const mc::Vector3D ob_ecef = r_n2e * ob_ned;
   const mc::GlobalCoordinate target = a_ecef + ob_ecef;
   const mc::MapCoordinate target_map = mc::ToMap(mc::GlobalToGeo(target));
   std::cout << "10m forward from A: lat=" << target_map.LatitudeDeg()

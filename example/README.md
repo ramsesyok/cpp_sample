@@ -32,5 +32,5 @@ clang++ -std=c++17 -Wall -Wextra \
 | [01_offset_from_center.cpp](01_offset_from_center.cpp) | グローバル座標 + Body 軸でのオフセット → グローバル座標 |
 | [02_bearing.cpp](02_bearing.cpp) | A → B の初期方位 (bearing) と大円距離 |
 | [03_path_simulation.cpp](03_path_simulation.cpp) | 通過時刻付き waypoint 列の補間による移動模擬 |
-| [04_misc.cpp](04_misc.cpp) | 2 点間の NEU 分解、外積による法線、姿勢補間など |
+| [04_misc.cpp](04_misc.cpp) | 2 点間の NED 分解、外積による法線、姿勢補間など |
 | [findings.md](findings.md) | サンプル実装を通じて見えた operator/型の不足の一覧 |

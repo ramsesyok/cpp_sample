@@ -6,10 +6,10 @@
 namespace myapp::common {
 
 /**
- * @brief ローカル (NEU: North-East-Up) 接平面座標系における位置 [m]。
+ * @brief ローカル (NED: North-East-Down) 接平面座標系における位置 [m]。
  *
  * 参照点 (通常は ECEF 上のある GeoCoordinate) を原点とし、
- *   x_: 北 (North)、y_: 東 (East)、z_: 上 (Up)
+ *   x_: 北 (North)、y_: 東 (East)、z_: 下 (Down)
  * の右手系で位置を表す。本プロジェクト内では「ローカル座標系」と呼ぶ。
  *
  * GlobalCoordinate と同様にアフィン点として扱い、位置同士の和や
@@ -22,7 +22,7 @@ class LocalCoordinate {
    * @brief 各軸の座標値 [m] からインスタンスを生成する。
    * @param x_m  北方向成分 [m]。
    * @param y_m  東方向成分 [m]。
-   * @param z_m  上方向成分 [m]。
+   * @param z_m  下方向成分 [m]。
    */
   LocalCoordinate(double x_m, double y_m, double z_m) : v_{x_m, y_m, z_m} {}
 
@@ -34,7 +34,7 @@ class LocalCoordinate {
   [[nodiscard]] double Y() const {
     return v_.y_;
   }
-  /** @brief 上方向成分 [m]。 */
+  /** @brief 下方向成分 [m]。 */
   [[nodiscard]] double Z() const {
     return v_.z_;
   }
