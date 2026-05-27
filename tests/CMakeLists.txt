@@ -21,22 +21,39 @@ target_include_directories(catch2_main PUBLIC
     ${CMAKE_SOURCE_DIR}/tests
 )
 
+# --- テスト追加用のヘルパ関数 ---------------------------------------
+# 同一パターンの add_executable / target_link_libraries / add_test を
+# 各テストごとに 3 行書くのは冗長なので、ヘルパ関数に集約する。
+#
+# 使い方:
+#   myapp_add_test(test_foo            test_foo.cpp PRIVATE_LIBS myapp_common)
+#   myapp_add_test(test_greet          test_greet.cpp PRIVATE_LIBS myapp_lib)
+#
+# 引数:
+#   name         : 実行ファイル名兼テスト名
+#   sources      : ソースファイル (複数可)
+#   PRIVATE_LIBS : 追加でリンクするライブラリ (catch2_main / coverage_flags は自動付与)
+function(myapp_add_test name)
+    cmake_parse_arguments(MAT "" "" "PRIVATE_LIBS" ${ARGN})
+    # 残った位置引数をソースファイルとして扱う。
+    set(sources ${MAT_UNPARSED_ARGUMENTS})
+
+    add_executable(${name} ${sources})
+    target_link_libraries(${name}
+        PRIVATE
+            ${MAT_PRIVATE_LIBS}
+            catch2_main
+            coverage_flags
+    )
+    add_test(NAME ${name} COMMAND ${name})
+endfunction()
+
 # --- tests 直下のテスト実行ファイル: test_greet ---------------------
 # 1 つのテスト実行ファイル = 1 つのテスト対象モジュール、という方針。
 # こうしておくと:
 #   - リンクするライブラリが最小限になりビルド依存が明確
 #   - CTest 上でモジュール単位の合否が見えて切り分けが楽
-add_executable(test_greet test_greet.cpp)
-
-# テスト対象のライブラリ (myapp_lib) と Catch2 本体 (catch2_main) をリンク。
-# 用途的にこの実行ファイル内でしか使わないので PRIVATE で良い。
-target_link_libraries(test_greet PRIVATE myapp_lib catch2_main coverage_flags)
-
-# CTest に登録する。
-#   - NAME: ctest が表示・選択に使う名前
-#   - COMMAND: 実際に起動するプログラム (ここでは同名のターゲット)
-# 登録すると `ctest` コマンドや `ctest -R test_greet` で実行できる。
-add_test(NAME test_greet COMMAND test_greet)
+myapp_add_test(test_greet test_greet.cpp PRIVATE_LIBS myapp_lib)
 
 # --- サブディレクトリのテストを取り込む ------------------------------
 # tests/common/CMakeLists.txt を読み込み、test_polygon などを追加する。

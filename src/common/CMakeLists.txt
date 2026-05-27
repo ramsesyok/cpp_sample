@@ -19,6 +19,7 @@ find_package(Threads REQUIRED)
 add_library(myapp_common
     logging.cpp
     logging.h
+    constants.h
     vector3d.h
     attitude.h
     matrix3x3.h
