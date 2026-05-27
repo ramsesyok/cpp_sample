@@ -32,18 +32,24 @@ target_include_directories(catch2_main PUBLIC
 # 引数:
 #   name         : 実行ファイル名兼テスト名
 #   sources      : ソースファイル (複数可)
-#   PRIVATE_LIBS : 追加でリンクするライブラリ (catch2_main / coverage_flags は自動付与)
+#   PRIVATE_LIBS : 追加でリンクするライブラリ
+#                  (catch2_main / coverage_flags / warning_flags は自動付与)
 function(myapp_add_test name)
     cmake_parse_arguments(MAT "" "" "PRIVATE_LIBS" ${ARGN})
     # 残った位置引数をソースファイルとして扱う。
     set(sources ${MAT_UNPARSED_ARGUMENTS})
 
     add_executable(${name} ${sources})
+    # warning_flags はテストコードにも適用する。
+    # テストも自プロジェクトの一部であり、変換警告等を本体と同じ基準で
+    # 検出したいため。3rdparty (catch2_main) は INTERFACE に乗らないので
+    # 巻き込まれない。
     target_link_libraries(${name}
         PRIVATE
             ${MAT_PRIVATE_LIBS}
             catch2_main
             coverage_flags
+            warning_flags
     )
     add_test(NAME ${name} COMMAND ${name})
 endfunction()

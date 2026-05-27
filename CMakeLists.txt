@@ -14,6 +14,19 @@ cmake_minimum_required(VERSION 3.16)
 #   - CXX = C++ を使う、という指定。C を使わないなら CXX だけで良い。
 project(myapp CXX)
 
+# --- ビルドタイプの既定値 -------------------------------------------
+# Makefile / Ninja のような単一構成ジェネレータでは CMAKE_BUILD_TYPE が
+# 空のままだと最適化もデバッグ情報も付かない素のビルドになってしまう。
+# 明示されていなければ Release を既定にする。
+# Visual Studio など多構成ジェネレータでは CMAKE_CONFIGURATION_TYPES が
+# 設定されるので、その場合は何もしない (構成は IDE 側で選ぶ)。
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING
+        "Choose the type of build: Debug Release RelWithDebInfo MinSizeRel" FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+        Debug Release RelWithDebInfo MinSizeRel)
+endif()
+
 # --- C++ の言語設定 -------------------------------------------------
 # 使用する C++ 標準のバージョン (ここでは C++17)。
 set(CMAKE_CXX_STANDARD 17)
@@ -103,6 +116,14 @@ option(ENABLE_COVERAGE "gcov によるカバレッジ計装を有効にする" O
 # サブディレクトリ側で条件分岐なしに target_link_libraries で参照できる。
 add_library(coverage_flags INTERFACE)
 if(ENABLE_COVERAGE)
+    # --coverage は GCC/Clang 専用フラグ。MSVC でこれを渡すと
+    # コンパイラが認識できず黙って壊れる、もしくは別の意味に解釈されるため、
+    # 早期にエラーで止める。
+    if(NOT CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
+        message(FATAL_ERROR
+            "ENABLE_COVERAGE=ON は GCC/Clang 専用です。"
+            " 現在のコンパイラ: ${CMAKE_CXX_COMPILER_ID}")
+    endif()
     if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
         message(WARNING
             "ENABLE_COVERAGE=ON ですが CMAKE_BUILD_TYPE が Debug ではありません。"
@@ -148,7 +169,8 @@ if(ENABLE_COVERAGE)
         add_custom_target(coverage
             COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/coverage
             COMMAND ${GCOVR_COMMAND}
-                --root ${CMAKE_SOURCE_DIR}/src
+                --root ${CMAKE_SOURCE_DIR}
+                --filter ${CMAKE_SOURCE_DIR}/src/
                 --exclude ${CMAKE_SOURCE_DIR}/3rdparty
                 --exclude ${CMAKE_SOURCE_DIR}/tests/catch2
                 --gcov-executable ${GCOV_EXECUTABLE_FOR_GCOVR}
