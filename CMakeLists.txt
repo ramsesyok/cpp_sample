@@ -226,14 +226,41 @@ endif()
 # run-clang-tidy (LLVM 同梱) を使って src/ 以下を一括解析する。
 # cmake --build build --target tidy
 if(CLANG_TIDY_EXECUTABLE)
+    # 1) run-clang-tidy / run-clang-tidy.exe を探す
+    #    LLVM 17+ の Windows インストーラには .exe ラッパーが同梱されている。
     find_program(RUN_CLANG_TIDY_EXECUTABLE
         NAMES
             run-clang-tidy-19 run-clang-tidy-18 run-clang-tidy-17
             run-clang-tidy-16 run-clang-tidy-15 run-clang-tidy
     )
+
     if(RUN_CLANG_TIDY_EXECUTABLE)
+        set(_run_clang_tidy_cmd "${RUN_CLANG_TIDY_EXECUTABLE}")
+    else()
+        # 2) .exe が見つからない場合: clang-tidy と同じ bin/ にある
+        #    run-clang-tidy.py を Python3 で実行するフォールバック。
+        #    Windows の旧 LLVM インストーラや vcpkg 環境で必要になる。
+        get_filename_component(_clang_tidy_dir "${CLANG_TIDY_EXECUTABLE}" DIRECTORY)
+        find_file(_run_clang_tidy_py
+            NAMES run-clang-tidy.py
+            HINTS "${_clang_tidy_dir}"
+            NO_DEFAULT_PATH
+        )
+        if(_run_clang_tidy_py)
+            find_package(Python3 COMPONENTS Interpreter QUIET)
+            if(Python3_Interpreter_FOUND)
+                set(_run_clang_tidy_cmd
+                    "${Python3_EXECUTABLE}" "${_run_clang_tidy_py}")
+                message(STATUS
+                    "run-clang-tidy.exe が見つかりません。"
+                    " Python 経由で実行します: ${_run_clang_tidy_cmd}")
+            endif()
+        endif()
+    endif()
+
+    if(_run_clang_tidy_cmd)
         add_custom_target(tidy
-            COMMAND ${RUN_CLANG_TIDY_EXECUTABLE}
+            COMMAND ${_run_clang_tidy_cmd}
                 -p "${CMAKE_BINARY_DIR}"
                 "${CMAKE_SOURCE_DIR}/src"
             WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
@@ -242,8 +269,11 @@ if(CLANG_TIDY_EXECUTABLE)
         )
     else()
         message(STATUS
-            "run-clang-tidy が見つかりません。`tidy` ターゲットは利用できません。\n"
-            "  sudo apt install clang-tidy  でインストールしてください。")
+            "run-clang-tidy / run-clang-tidy.py が見つかりません。"
+            " `tidy` ターゲットは利用できません。\n"
+            "  Ubuntu: sudo apt install clang-tidy\n"
+            "  macOS:  brew install llvm\n"
+            "  Windows: https://releases.llvm.org/ からインストーラを取得")
     endif()
 else()
     message(STATUS
