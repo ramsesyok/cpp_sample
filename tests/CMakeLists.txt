@@ -10,9 +10,16 @@
 # 毎回コンパイルすると重い。
 # そこで一度だけ静的ライブラリとしてビルドし、各テスト実行ファイルから
 # リンクすることで、ビルド時間を大幅に短縮する。
+#
+# catch2_main は 3rdparty のため clang-tidy 対象から除外する。
+# CMAKE_CXX_CLANG_TIDY を一時的にクリアしてからターゲットを作成し、
+# 元の値を復元することで、後続ターゲットには影響を与えない。
+set(_saved_cmake_cxx_clang_tidy "${CMAKE_CXX_CLANG_TIDY}")
+set(CMAKE_CXX_CLANG_TIDY "")
 add_library(catch2_main STATIC
     ${CMAKE_SOURCE_DIR}/tests/catch2/catch_amalgamated.cpp
 )
+set(CMAKE_CXX_CLANG_TIDY "${_saved_cmake_cxx_clang_tidy}")
 
 # include パスを PUBLIC にしておくことで、
 # catch2_main をリンクするテスト側で #include <catch2/catch_amalgamated.hpp>
