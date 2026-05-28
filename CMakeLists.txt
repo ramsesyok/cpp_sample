@@ -37,6 +37,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # 移植性を高めたいので OFF が無難。
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# --- コンパイルデータベースの出力 ------------------------------------
+# clang-tidy / clangd (LSP) / Include-What-You-Use 等のツールが参照する
+# compile_commands.json を ${CMAKE_BINARY_DIR} に生成する。
+# Makefile / Ninja ジェネレータのみ有効。Visual Studio は独自の DB を持つ。
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # --- テストの有効化 -------------------------------------------------
 # CTest を有効にするおまじない。
 # これを書いておくと、後で各 CMakeLists.txt で add_test() したものが
@@ -185,6 +191,63 @@ if(ENABLE_COVERAGE)
             "gcovr が見つかりません。`coverage` ターゲットは利用できません。"
             " pip install gcovr でインストールしてください。")
     endif()
+endif()
+
+# --- clang-tidy による静的解析 ---------------------------------------
+# 使い方 (ビルド時に自動解析):
+#   cmake -S . -B build -DENABLE_CLANG_TIDY=ON
+#   cmake --build build
+# 使い方 (tidy ターゲットで任意実行):
+#   cmake -S . -B build
+#   cmake --build build --target tidy
+#
+# ENABLE_CLANG_TIDY=ON にすると全ターゲットの CXX_CLANG_TIDY プロパティが
+# セットされ、コンパイル時に clang-tidy が走る。3rdparty ターゲット
+# (catch2_main) はサブディレクトリ側で除外する。
+option(ENABLE_CLANG_TIDY "ビルド時に clang-tidy を実行する" OFF)
+
+find_program(CLANG_TIDY_EXECUTABLE
+    NAMES clang-tidy-19 clang-tidy-18 clang-tidy-17 clang-tidy-16 clang-tidy-15 clang-tidy
+)
+
+if(ENABLE_CLANG_TIDY)
+    if(NOT CLANG_TIDY_EXECUTABLE)
+        message(FATAL_ERROR
+            "ENABLE_CLANG_TIDY=ON ですが clang-tidy が見つかりません。\n"
+            "  sudo apt install clang-tidy  (Ubuntu)\n"
+            "  brew install llvm            (macOS)\n"
+            "でインストールしてください。")
+    endif()
+    message(STATUS "clang-tidy (ビルド統合): ${CLANG_TIDY_EXECUTABLE}")
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXECUTABLE}")
+endif()
+
+# tidy ターゲット: ENABLE_CLANG_TIDY の ON/OFF にかかわらず利用できる。
+# run-clang-tidy (LLVM 同梱) を使って src/ 以下を一括解析する。
+# cmake --build build --target tidy
+if(CLANG_TIDY_EXECUTABLE)
+    find_program(RUN_CLANG_TIDY_EXECUTABLE
+        NAMES
+            run-clang-tidy-19 run-clang-tidy-18 run-clang-tidy-17
+            run-clang-tidy-16 run-clang-tidy-15 run-clang-tidy
+    )
+    if(RUN_CLANG_TIDY_EXECUTABLE)
+        add_custom_target(tidy
+            COMMAND ${RUN_CLANG_TIDY_EXECUTABLE}
+                -p "${CMAKE_BINARY_DIR}"
+                "${CMAKE_SOURCE_DIR}/src"
+            WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+            COMMENT "clang-tidy で静的解析中 (src/) ..."
+            VERBATIM
+        )
+    else()
+        message(STATUS
+            "run-clang-tidy が見つかりません。`tidy` ターゲットは利用できません。\n"
+            "  sudo apt install clang-tidy  でインストールしてください。")
+    endif()
+else()
+    message(STATUS
+        "clang-tidy が見つかりません。ENABLE_CLANG_TIDY と `tidy` ターゲットは利用できません。")
 endif()
 
 # --- サブディレクトリの読み込み -------------------------------------
