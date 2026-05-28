@@ -223,17 +223,56 @@ if(ENABLE_CLANG_TIDY)
 endif()
 
 # tidy ターゲット: ENABLE_CLANG_TIDY の ON/OFF にかかわらず利用できる。
-# run-clang-tidy (LLVM 同梱) を使って src/ 以下を一括解析する。
+# run-clang-tidy (Python スクリプト) を使って src/ 以下を一括解析する。
 # cmake --build build --target tidy
+#
+# run-clang-tidy は常に Python スクリプトとして提供される。
+# LLVM-mingw など run-clang-tidy.py が同梱されない環境では、
+# スクリプトを手動で入手して RUN_CLANG_TIDY_SCRIPT に指定する:
+#   cmake -S . -B build -DRUN_CLANG_TIDY_SCRIPT=/path/to/run-clang-tidy.py
+# スクリプトの入手先:
+#   https://raw.githubusercontent.com/llvm/llvm-project/main/clang-tools-extra/clang-tidy/tool/run-clang-tidy.py
+set(RUN_CLANG_TIDY_SCRIPT "" CACHE FILEPATH
+    "run-clang-tidy.py のパス (自動検出できない環境で明示指定する)")
+
 if(CLANG_TIDY_EXECUTABLE)
-    find_program(RUN_CLANG_TIDY_EXECUTABLE
-        NAMES
-            run-clang-tidy-19 run-clang-tidy-18 run-clang-tidy-17
-            run-clang-tidy-16 run-clang-tidy-15 run-clang-tidy
+    find_package(Python3 COMPONENTS Interpreter QUIET)
+
+    # 1) PATH 上の run-clang-tidy シム (Linux/macOS の apt/brew 等)
+    find_program(_run_clang_tidy_in_path
+        NAMES run-clang-tidy-19 run-clang-tidy-18 run-clang-tidy-17
+              run-clang-tidy-16 run-clang-tidy-15 run-clang-tidy
     )
-    if(RUN_CLANG_TIDY_EXECUTABLE)
+
+    # 2) clang-tidy と同じ bin/ にある run-clang-tidy.py
+    #    (公式 LLVM Windows インストーラ, Homebrew llvm 等)
+    get_filename_component(_clang_tidy_dir "${CLANG_TIDY_EXECUTABLE}" DIRECTORY)
+    find_file(_run_clang_tidy_beside_clang
+        NAMES run-clang-tidy.py
+        HINTS "${_clang_tidy_dir}"
+        NO_DEFAULT_PATH
+    )
+
+    # 3) ユーザーが明示指定したパス (LLVM-mingw 等で手動入手した場合)
+    if(RUN_CLANG_TIDY_SCRIPT)
+        set(_run_clang_tidy_py "${RUN_CLANG_TIDY_SCRIPT}")
+    elseif(_run_clang_tidy_beside_clang)
+        set(_run_clang_tidy_py "${_run_clang_tidy_beside_clang}")
+    endif()
+
+    # コマンドを確定する
+    if(_run_clang_tidy_in_path)
+        # PATH 上のシムはそのまま実行できる
+        set(_run_clang_tidy_cmd "${_run_clang_tidy_in_path}")
+    elseif(_run_clang_tidy_py AND Python3_Interpreter_FOUND)
+        # .py スクリプトを Python3 経由で実行
+        set(_run_clang_tidy_cmd "${Python3_EXECUTABLE}" "${_run_clang_tidy_py}")
+        message(STATUS "run-clang-tidy: Python 経由で実行 → ${_run_clang_tidy_cmd}")
+    endif()
+
+    if(_run_clang_tidy_cmd)
         add_custom_target(tidy
-            COMMAND ${RUN_CLANG_TIDY_EXECUTABLE}
+            COMMAND ${_run_clang_tidy_cmd}
                 -p "${CMAKE_BINARY_DIR}"
                 "${CMAKE_SOURCE_DIR}/src"
             WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
@@ -242,8 +281,13 @@ if(CLANG_TIDY_EXECUTABLE)
         )
     else()
         message(STATUS
-            "run-clang-tidy が見つかりません。`tidy` ターゲットは利用できません。\n"
-            "  sudo apt install clang-tidy  でインストールしてください。")
+            "run-clang-tidy.py が見つかりません。`tidy` ターゲットは利用できません。\n"
+            "  Ubuntu/Debian: sudo apt install clang-tidy\n"
+            "  macOS:         brew install llvm\n"
+            "  LLVM-mingw など: 下記からスクリプトを入手し "
+            "-DRUN_CLANG_TIDY_SCRIPT=/path/to/run-clang-tidy.py で指定\n"
+            "  https://raw.githubusercontent.com/llvm/llvm-project/main"
+            "/clang-tools-extra/clang-tidy/tool/run-clang-tidy.py")
     endif()
 else()
     message(STATUS

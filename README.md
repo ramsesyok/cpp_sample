@@ -130,6 +130,71 @@ cmake --build build-cov --target coverage
 > **対象範囲**: `src/` 配下の本体コードのみ計測する。
 > `3rdparty/` および `tests/catch2/` (Catch2 本体) は集計から除外される。
 
+## 静的解析 (clang-tidy)
+
+`.clang-tidy` で検査ルールを定義している。`compile_commands.json` は
+cmake configure 時に `build/compile_commands.json` へ自動生成されるため、
+clangd (LSP) や IDE の静的解析との連携も追加設定なしに動作する。
+
+### ビルド時に自動解析する (`ENABLE_CLANG_TIDY=ON`)
+
+`-DENABLE_CLANG_TIDY=ON` を付けると、コンパイルのたびに clang-tidy が走る。
+CI や最終確認に使う想定。
+
+```sh
+cmake -S . -B build -DENABLE_CLANG_TIDY=ON
+cmake --build build
+```
+
+`clang-tidy` が PATH 上にない場合は configure 時にエラーになる。
+
+### tidy ターゲットで任意実行する
+
+`ENABLE_CLANG_TIDY` の ON/OFF にかかわらず使える。`run-clang-tidy`
+を使って `src/` 以下の全ファイルを並列解析する。
+
+```sh
+cmake -S . -B build        # compile_commands.json を生成
+cmake --build build --target tidy
+```
+
+`tidy` ターゲットの作成には `run-clang-tidy`（Python スクリプト）が必要。
+インストール方法は環境によって異なる。
+
+| 環境 | インストール方法 |
+|------|----------------|
+| Ubuntu/Debian | `sudo apt install clang-tidy`（`run-clang-tidy` も同梱） |
+| macOS | `brew install llvm` |
+| LLVM-mingw | `clang-tidy` 本体は同梱されるが `run-clang-tidy.py` は非同梱。下記参照 |
+
+#### LLVM-mingw で tidy ターゲットを使う
+
+LLVM-mingw は `run-clang-tidy.py` を含まないため、スクリプトを手動で入手して
+`RUN_CLANG_TIDY_SCRIPT` に指定する。
+
+```powershell
+# スクリプトを入手 (プロジェクト直下などに保存)
+curl -o run-clang-tidy.py `
+  https://raw.githubusercontent.com/llvm/llvm-project/main/clang-tools-extra/clang-tidy/tool/run-clang-tidy.py
+
+# configure 時にパスを指定
+cmake -S . -B build -DRUN_CLANG_TIDY_SCRIPT=$PWD/run-clang-tidy.py
+
+cmake --build build --target tidy
+```
+
+`ENABLE_CLANG_TIDY=ON`（ビルド時統合）は `clang-tidy` 本体だけで動作するため、
+LLVM-mingw でも追加作業なしに使える。
+
+### 検査設定
+
+[`.clang-tidy`](.clang-tidy) でルールセットと命名規則を定義している。
+主な設定内容:
+
+- `bugprone-*` / `performance-*` / `clang-analyzer-*` などはエラー扱い
+- 命名規則は Google C++ Style Guide 準拠 (型: `CamelCase`、変数: `lower_case`、定数: `kCamelCase`、メンバ変数: `lower_case_` )
+- 数値計算・座標処理の都合で `readability-magic-numbers` などは除外済み
+
 ## サードパーティ依存
 
 依存はすべて [3rdparty/](3rdparty/) 配下に置き、リポジトリ単体でビルドできる
